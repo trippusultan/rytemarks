@@ -13,6 +13,7 @@ const metascraper = require('metascraper')([
 const PORT = +process.env.PORT || 4040; // PORT=4141 lets a preview run beside your real instance
 const PAGE = 100;
 const { backupOnce, latestBackup } = require('./backups');
+const { normalizeUrl } = require('./urls');
 const BACKUP_DIR = process.env.MARKS_BACKUPS || path.join(__dirname, 'backups');
 const UA = 'Mozilla/5.0 (compatible; rytemarks personal bookmark archiver)';
 
@@ -46,7 +47,7 @@ if (!db.prepare("SELECT 1 FROM pragma_table_info('bookmarks') WHERE name = 'arch
 const now = () => Math.floor(Date.now() / 1000);
 const isDead = s => s === 404 || s === 410;
 const parseTags = s => [...new Set(String(s || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean))];
-const httpUrl = s => { try { const u = new URL(s); return /^https?:$/.test(u.protocol) ? u.href : null; } catch { return null; } };
+const httpUrl = s => { try { const u = new URL(s); return /^https?:$/.test(u.protocol) ? normalizeUrl(u.href) : null; } catch { return null; } };
 // Accepts "example.com/x" as well as full URLs; only http(s) survives.
 const cleanUrl = s => {
   s = String(s || '').trim();

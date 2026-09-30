@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test",
     "start": "node server.js",
-    "backup": "node backup.js"
+    "backup": "node backup.js",
+    "dedupe": "node dedupe.js"
   },
   "keywords": [],
   "author": "",
