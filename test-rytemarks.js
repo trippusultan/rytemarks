@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { setup } = require('./test-helpers');
 
-test('rytemarks: name, logo files, equal bars, terminal font', async t => {
+test('rytemarks: name, logo, equal bars, terminal font', async t => {
   const s = await setup(t);
   s.db.prepare("INSERT INTO bookmarks(url,title,saved_at) VALUES ('https://a.test','A',1)").run();
   const html = await s.get('/');
@@ -20,26 +20,17 @@ test('rytemarks: name, logo files, equal bars, terminal font', async t => {
     assert.match(done, /<a href="\/">Open rytemarks<\/a>/);
   });
 
-  await t.test('header shows the supplied logo (mark + wordmark, named for screen readers); footer credit has no logo', () => {
-    assert.match(html, /<a href="\/" class=brand><img class=logo-mark src="\/rytemarks-mark\.png" alt="" width=17 height=34><img class=logo-word src="\/rytemarks-wordmark\.png" alt="rytemarks" width=125 height=24><\/a>/);
-    assert.match(html, /<link rel=icon type="image\/png" href="\/favicon\.png">/);
-    assert.doesNotMatch(html, /class=wordmark|class=mark /);
+  await t.test('logo is the vector tally mark plus a text wordmark "rytemarks": no image files, no static file serving', async () => {
+    assert.match(html, /<a href="\/" class=brand><svg class=mark [^>]*aria-hidden=true[^>]*>[\s\S]*?<\/svg><span class=wordmark>rytemarks<\/span><\/a>/);
+    assert.doesNotMatch(/<header>[\s\S]*?<\/header>/.exec(html)[0], /<img /); // cards do carry <img> favicons, so look at the header only
+    assert.doesNotMatch(html, /logo-mark|logo-word|favicon\.png/);
+    for (const f of ['/rytemarks-mark.png', '/rytemarks-wordmark.png', '/favicon.png', '/server.js', '/marks.db']) assert.equal((await fetch(s.base + f)).status, 404, f);
   });
 
-  await t.test('logo files are served from public/ only', async () => {
-    for (const f of ['/rytemarks-mark.png', '/rytemarks-wordmark.png', '/favicon.png']) {
-      const r = await fetch(s.base + f);
-      assert.equal(r.status, 200, f);
-      assert.equal(r.headers.get('content-type'), 'image/png', f);
-      assert.equal(Buffer.from(await r.arrayBuffer()).subarray(1, 4).toString(), 'PNG', f);
-    }
-    for (const f of ['/server.js', '/package.json', '/marks.db', '/public/favicon.png']) assert.equal((await fetch(s.base + f)).status, 404, f);
-  });
-
-  await t.test('CSS: slate logo sits on a light chip in the dark theme, plain on light', () => {
-    assert.match(css, /\.brand\{[^}]*height:/);
-    assert.match(css, /\.logo-mark\{[^}]*height:34px/);
-    assert.match(css, /@media\(prefers-color-scheme:dark\)\{[^@]*\.brand\{[^}]*background:#f3f6f7/);
+  await t.test('CSS: the wordmark uses the terminal font and the mark takes the text colour on both themes', () => {
+    assert.match(css, /\.wordmark\{[^}]*font-family:var\(--ui\)[^}]*letter-spacing:-\.02em/);
+    assert.match(css, /\.mark\{display:block\}/);
+    assert.doesNotMatch(css, /\.logo-|\.brand\{[^}]*background/);
   });
 
   await t.test('CSS: search and add bars are one height, on desktop and on phones', () => {

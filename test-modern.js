@@ -130,11 +130,11 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
     assert.ok(css.indexOf(rule[0]) > css.indexOf('html[data-view=list] .card .t{flex:1'), 'and comes after the base list rules');
   });
 
-  await t.test('CSS: one radius system, mono for meta, logo sized in the header', () => {
+  await t.test('CSS: one radius system, mono for meta, heavy terminal wordmark', () => {
     assert.match(css, /--r:8px/);
     const radii = [...css.matchAll(/border-radius:([^;}]+)/g)].map(m => m[1]);
     assert.ok(radii.length > 5 && radii.every(r => r === 'var(--r)' || r === '0'), radii.join(' | '));
     assert.match(css, /\.dom[^{]*\{[^}]*font-family:var\(--mono\)/);
-    assert.match(css, /\.logo-word\{[^}]*height:24px/);
+    assert.match(css, /\.wordmark\{[^}]*font-weight:\s*7\d0/);
   });
 });

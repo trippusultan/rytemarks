@@ -36,7 +36,7 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 
 ## Brand
 
-The logo is the supplied tally-mark-and-ribbon mark plus the "rytemarks" wordmark. The originals are in `docs/brand/logo/`; the copies the app serves are in `public/` (the wordmark had an opaque black background, so it was keyed to transparent in the same slate ink as the mark, and there is a square favicon on a light chip). On the dark theme the slate logo sits on a light chip so it stays readable. `docs/brand/brand-board.html` holds the palette and tagline; `test-brand.js` keeps the palette in sync. The database file is still `marks.db`.
+The logo is a tally mark (four strokes and a ribbon) drawn as inline SVG, next to a "rytemarks" wordmark set in the terminal font; the favicon is the same mark. On the dark theme the strokes take the text colour, so nothing else is needed. `docs/brand/brand-board.html` holds the palette and tagline, and `test-brand.js` keeps the mark and palette in sync with the app. A PNG logo and wordmark were tried and dropped; the supplied files are kept in `docs/brand/logo/` and in git history (commit fcf255e). The database file is still `marks.db`.
 
 ## Look and shortcuts
 

@@ -227,6 +227,8 @@ const safeBack = s => {
 
 // The address travels in the link (a GET that opens a tab), not in a form body: some browsers open a form's
 // target=_blank as a bare GET and drop the POST body. /save then auto-submits the real POST itself.
+const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
+const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
@@ -247,16 +249,16 @@ header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center
 main{width:100%;flex:1;max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
 footer{max-width:1200px;width:100%;margin:0 auto;padding:1.25rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:flex;flex-direction:column;gap:.6rem}footer a{color:inherit}
 .fbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem 1.5rem}
-.fl2{display:flex;align-items:center;gap:.6rem;color:var(--fg)}
+.fl2{display:flex;align-items:center;gap:.6rem;color:var(--fg)}.fl2 .mark{width:20px;height:15px}
 .fl2 a{display:inline-flex;align-items:center;gap:.3rem;color:var(--acc);font-weight:500}
 .fr2{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.1rem}.fr2 a{display:inline-flex;align-items:center;gap:.35rem}
 .fine{margin:0;font-size:12px}
 .jobs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}.side .jobs{margin-top:.75rem}
 .drag{padding:.25rem .6rem;border:1px dashed var(--line);border-radius:var(--r);color:var(--fg);cursor:grab}
 .drag:hover{border-color:var(--acc);color:var(--acc);text-decoration:none}
-.brand{display:flex;align-items:center;gap:.55rem;height:2.25rem;padding:0 .2rem;border-radius:var(--r)}.brand:hover{text-decoration:none}
-.logo-mark{display:block;height:34px;width:auto}.logo-word{display:block;height:24px;width:auto}
-@media(prefers-color-scheme:dark){.brand{background:#f3f6f7;padding:0 .7rem}}
+.brand{display:flex;align-items:center;gap:.55rem;color:var(--fg)}.brand:hover{text-decoration:none}
+.mark{display:block}
+.wordmark{font-family:var(--ui);font-size:1.5rem;font-weight:750;letter-spacing:-.02em;line-height:1}
 .tagline{font-weight:650;font-size:1.15rem;letter-spacing:-.02em;color:var(--acc);margin:.25rem 0 .75rem}
 .topnav{display:flex;gap:.15rem;align-items:center;margin-right:auto}
 .topnav a{display:flex;align-items:center;gap:.45rem;padding:.4rem .75rem;border-radius:var(--r);color:var(--mut);font-weight:500;white-space:nowrap}
@@ -444,10 +446,10 @@ const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype ht
 <meta name=description content="Your personal bookmark archive: saved pages, tags, notes and full-text search on your own machine.">
 <meta name=theme-color content="#f3f6f7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#0a1013" media="(prefers-color-scheme: dark)">
 <script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
-<link rel=icon type="image/png" href="/favicon.png"><style>${CSS}</style>
-${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand><img class=logo-mark src="/rytemarks-mark.png" alt="" width=17 height=34><img class=logo-word src="/rytemarks-wordmark.png" alt="rytemarks" width=125 height=24></a>${navHtml(cur)}<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${ic('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
+<link rel=icon href="${FAVICON}"><style>${CSS}</style>
+${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>rytemarks</span></a>${navHtml(cur)}<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${ic('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
 <main id=main>${body}</main>
-<footer><div class=fbar><div class=fl2><span>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${ic('github-logo')}@trippusultan</a></span></div>
+<footer><div class=fbar><div class=fl2>${raw(MARK_SVG)}<span>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${ic('github-logo')}@trippusultan</a></span></div>
 <div class=fr2><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">${ic('plus')}Save to rytemarks</a><a href="/bookmarklet">${ic('question')}Install help</a><a href="/export?format=json">${ic('download-simple')}Export JSON</a><a href="/export?format=csv">${ic('download-simple')}Export CSV</a></div></div>
 <p class=fine>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom. Icons by Phosphor (MIT).</p></footer>
 ${tabHtml(cur)}
@@ -507,7 +509,6 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public'), { index: false })); // logo files only; nothing else is reachable
 
 app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();

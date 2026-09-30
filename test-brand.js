@@ -7,21 +7,23 @@ const { setup } = require('./test-helpers');
 const RIBBON = 'M34 3h8v26l-4-4-4 4z';
 const STROKES = 'M5 5v22M13 5v22M21 5v22M29 5v22';
 
-test('brand: logo files, palette, tagline', async t => {
+test('brand: tally mark, terminal wordmark, palette, tagline', async t => {
   const s = await setup(t);
   const html = await s.get('/');
   const css = /<style>([\s\S]*?)<\/style>/.exec(html)[1];
   const board = fs.readFileSync(path.join(__dirname, 'docs', 'brand', 'brand-board.html'), 'utf8');
 
-  await t.test('header carries the rytemarks logo files; no serif anywhere', () => {
-    assert.match(html, /<a href="\/" class=brand><img class=logo-mark src="\/rytemarks-mark\.png"/);
-    assert.match(html, /<img class=logo-word src="\/rytemarks-wordmark\.png" alt="rytemarks"/);
+  await t.test('header carries the tally mark and a "rytemarks" wordmark set in the terminal font', () => {
+    assert.match(html, /<a href="\/" class=brand><svg class=mark [^>]*aria-hidden=true/);
+    assert.ok(html.includes(STROKES) && html.includes(RIBBON), 'mark paths');
+    assert.match(html, /<span class=wordmark>rytemarks<\/span>/);
+    assert.match(css, /\.wordmark\{[^}]*font-family:var\(--ui\)/);
     assert.doesNotMatch(css, /(?<!sans-)serif/, 'no serif anywhere');
   });
 
-  await t.test('the favicon is the mark on a light chip, and the supplied originals are kept as the source', () => {
-    assert.match(html, /<link rel=icon type="image\/png" href="\/favicon\.png">/);
-    for (const f of ['rytemarks-mark.png', 'rytemarks-wordmark.png']) assert.ok(fs.existsSync(path.join(__dirname, 'docs', 'brand', 'logo', f)), f);
+  await t.test('the favicon is the same mark', () => {
+    const icon = decodeURIComponent(/<link rel=icon href="([^"]+)"/.exec(html)[1]);
+    assert.ok(icon.includes('M22 6h5v20l-2.5-3-2.5 3z'), 'ribbon in favicon');
   });
 
   await t.test('empty state says the tagline', async () => {

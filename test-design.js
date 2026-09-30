@@ -72,8 +72,8 @@ test('design rules', async t => {
     for (const p of [light, dark]) assert.ok(contrast(p.mut, p.chip) >= 4.5, 'count text on chips');
   });
 
-  await t.test('explicit favicon link, so browsers stop requesting /favicon.ico', () => {
-    assert.match(html, /<link rel=icon type="image\/png" href="\/favicon\.png">/);
+  await t.test('inline favicon, so browsers stop requesting /favicon.ico', () => {
+    assert.match(html, /<link rel=icon href="data:image\/svg\+xml,/);
   });
 
   await t.test('meta description and theme-color that match the palette', () => {

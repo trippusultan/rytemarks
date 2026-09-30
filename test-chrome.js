@@ -35,7 +35,7 @@ test('chrome: toast, add composer, header, footer', async t => {
 
   await t.test('footer: one slim bar (credit left, tool links right), no dot separators, quiet buttons', () => {
     const footer = bare(/<footer>[\s\S]*<\/footer>/.exec(html)[0]);
-    assert.match(footer, /<footer><div class=fbar><div class=fl2><span>Made by <a href="https:\/\/github\.com\/trippusultan" rel="noopener noreferrer">@trippusultan<\/a><\/span><\/div>/);
+    assert.match(footer, /<footer><div class=fbar><div class=fl2><svg class=mark [^>]*>[\s\S]*?<\/svg><span>Made by <a href="https:\/\/github\.com\/trippusultan" rel="noopener noreferrer">@trippusultan<\/a><\/span><\/div>/);
     assert.match(footer, /<div class=fr2><a class=drag href="javascript:/);
     assert.match(footer, /<p class=fine>Built on Node\.js, Express, SQLite, Mozilla Readability, metascraper and jsdom\. Icons by Phosphor \(MIT\)\.<\/p>/);
     assert.doesNotMatch(footer, /Maintenance|Check links/, 'maintenance moved to the Status panel');
