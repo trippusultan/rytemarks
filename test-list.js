@@ -11,6 +11,7 @@ test('friendlier list', async t => {
     const html = await s.get('/');
     assert.match(html, /Nothing saved yet/);
     assert.match(html, /href="\/bookmarklet"/);
+    assert.match(html, /<p class=meta>No tags yet\. Add some when you save a page\.<\/p>/);
   });
 
   s.db.prepare('INSERT INTO bookmarks(url,title,saved_at) VALUES (?,?,?),(?,?,?)').run('https://a.test', 'Alpha page', nowS - 30, 'https://b.test', 'Beta page', nowS - 3 * 86400);

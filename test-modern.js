@@ -88,6 +88,23 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
     assert.equal(d.activeElement, q);
   });
 
+  await t.test('sidebar: a tag cloud with counts, a status row, a manage link', () => {
+    assert.match(html, /<aside aria-label="Tags and status"><section class=side>/);
+    assert.match(html, /<h3>Tags <span class=n>1<\/span><\/h3>/);
+    assert.match(html, /<div class=cloud><a href="\/\?tag=reading" class="tc">#reading <span class=n>1<\/span><\/a><\/div>/);
+    assert.match(html, /<a class=more href="\/tags">Manage tags<\/a>/);
+    assert.match(html, /<section class=side><h3>Status<\/h3><a class="stat" href="\/\?dead=1"><span>Dead links<\/span><span class="badge">0<\/span><\/a><\/section>/);
+  });
+
+  await t.test('CSS: sidebar panels, chips with active state, badge', () => {
+    assert.match(css, /\.side\{[^}]*background:var\(--surface\)/);
+    assert.match(css, /\.tc\.on\{[^}]*background:var\(--acc\)/);
+    assert.match(css, /\.tc\{[^}]*max-width:100%[^}]*overflow-wrap:anywhere/); // a very long tag wraps inside the narrow panel
+    assert.match(css, /\.badge\.bad\{[^}]*color:var\(--bad\)/);
+    assert.match(css, /aside\{[^}]*flex-direction:column/);
+    assert.ok(css.lastIndexOf('@media(max-width:700px){aside{position:static') > css.indexOf('aside{position:sticky'), 'phone override comes after the sticky rule');
+  });
+
   await t.test('CSS: sticky translucent header with a solid fallback', () => {
     assert.match(css, /header\{[^}]*position:sticky[^}]*backdrop-filter:blur/);
     assert.match(css, /@media\(prefers-reduced-transparency:reduce\)\{header\{[^}]*backdrop-filter:none/);

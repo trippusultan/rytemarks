@@ -64,6 +64,14 @@ test('design rules', async t => {
     assert.match(css, /letter-spacing:\s*-\.\d+em/); // tighter heading tracking
   });
 
+  await t.test('dead-links badge: warning text on its own tint stays readable in both themes', () => {
+    const pct = +/\.badge\.bad\{[^}]*color-mix\(in srgb,var\(--bad\) (\d+)%/.exec(css)?.[1];
+    assert.ok(pct > 0 && pct <= 20, 'badge tint percentage present and light');
+    const mix = (a, b, p) => '#' + [1, 3, 5].map(i => Math.round(parseInt(a.slice(i, i + 2), 16) * p + parseInt(b.slice(i, i + 2), 16) * (1 - p)).toString(16).padStart(2, '0')).join('');
+    for (const p of [light, dark]) assert.ok(contrast(p.bad, mix(p.bad, p.surface, pct / 100)) >= 4.5, 'bad on its tint');
+    for (const p of [light, dark]) assert.ok(contrast(p.mut, p.chip) >= 4.5, 'count text on chips');
+  });
+
   await t.test('inline favicon, so browsers stop requesting /favicon.ico', () => {
     assert.match(html, /<link rel=icon href="data:image\/svg\+xml,/);
   });

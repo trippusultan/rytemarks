@@ -31,7 +31,7 @@ test('multi-tag filter', async t => {
 
   await t.test('sidebar toggles tags in and out of the filter', async () => {
     const html = await s.get('/?tag=a');
-    assert.match(html, /<a href="\/\?tag=a%2Cb" class="">#b<\/a>/);
-    assert.match(html, /<a href="\/" class="on">#a<\/a>/);
+    assert.match(html, /<a href="\/\?tag=a%2Cb" class="tc">#b <span class=n>2<\/span><\/a>/);
+    assert.match(html, /<a href="\/" class="tc on">#a <span class=n>2<\/span><\/a>/);
   });
 });

@@ -285,7 +285,20 @@ html[data-view=list] .card .foot{margin:0}
 @media(max-width:640px){html[data-view=list] .card .top{width:100%}html[data-view=list] .card .t{flex-basis:100%;-webkit-line-clamp:2}html[data-view=list] .card .foot{width:100%}}
 .meta{color:var(--mut);font-size:13px}.meta a{color:inherit}.meta a:hover{color:var(--acc)}
 .dead{color:var(--bad);font-weight:600;font-size:12px}
-aside{position:sticky;top:5rem;max-height:calc(100vh - 6rem);overflow:auto;font-size:13px}aside li{padding:.15rem 0}aside a.on{color:var(--fg);font-weight:600}
+aside{position:sticky;top:5rem;max-height:calc(100vh - 6rem);overflow:auto;display:flex;flex-direction:column;gap:.75rem;font-size:13px}
+@media(max-width:700px){aside{position:static;max-height:none}}
+.side{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:.9rem}
+.side h3{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 .65rem;font-size:13px;letter-spacing:-.01em}
+.n{font:12px var(--mono);color:var(--mut);font-weight:500}
+.cloud{display:flex;flex-wrap:wrap;gap:.35rem}
+.tc{display:inline-flex;align-items:center;gap:.4rem;max-width:100%;overflow-wrap:anywhere;padding:.2rem .55rem;border-radius:var(--r);background:var(--chip);color:var(--fg);font-size:12.5px;font-weight:500}
+.tc:hover{box-shadow:inset 0 0 0 1px var(--acc);text-decoration:none}
+.tc .n{font-size:11px}
+.tc.on{background:var(--acc);color:var(--on-acc)}.tc.on .n{color:inherit}
+.more{display:inline-block;margin-top:.75rem;color:var(--mut)}.more:hover{color:var(--acc)}
+.stat{display:flex;justify-content:space-between;align-items:center;color:var(--fg)}.stat:hover{text-decoration:none;color:var(--acc)}
+.badge{font:600 11px var(--mono);padding:.05rem .5rem;border-radius:var(--r);background:var(--chip);color:var(--mut)}
+.badge.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
 label{display:block;margin:.9rem 0 .25rem;font-weight:600;font-size:13px}
 form.edit input[type=text],textarea{width:100%}
 .add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
@@ -408,6 +421,7 @@ app.get('/', (req, res) => {
     ${b.snippet && h`<p class=note>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</p>`}
     ${b.note && h`<p class=note>${b.note}</p>`}
     <div class=foot>${b.tags.map(t => h`<a class=tg href="/${qs({ tag: t })}">#${t}</a>`)}<span class=when title="${date(b.saved_at)}">${ago(b.saved_at)}</span><a class=edit href="/b/${b.id}${backParam}">edit</a></div></li>`;
+  const tagList = allTags(), deadCount = db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n;
   res.send(page('marks', h`<div class=layout>
     <section><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
     ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
@@ -417,7 +431,7 @@ app.get('/', (req, res) => {
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>
-    <aside aria-label="Tags and status"><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
+    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a></section></aside></div>`, { q, tag }));
 });
 
 const badUrl = (res, given) => res.status(400).send(page('Bad URL', h`<h2>Couldn't save that</h2>
