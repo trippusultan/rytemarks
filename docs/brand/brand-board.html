@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>marks: brand board</title>
+<style>
+/* Brand board for "marks". Source of truth for the mark and palette; the app (server.js) uses the same paths and hex values.
+   Direction (decided by Jev): light editorial, paper / ink / moss, local serif + system sans, light first, dark follows. */
+:root{
+  --paper:#fbfaf7; --ink:#1d1d1a; --moss:#2f6f5e; --grey:#6d6c66; --rule:#e6e4dd; --canvas:#e9e7e0;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:"Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.5 var(--sans);padding:clamp(12px,3vw,40px)}
+.board{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,24px)}
+@media(max-width:760px){.board{grid-template-columns:1fr}}
+.panel{position:relative;background:var(--paper);border-radius:10px;aspect-ratio:4/3;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8%}
+.label{position:absolute;left:5%;top:5%;font:12px var(--sans);color:var(--grey);letter-spacing:.04em}
+.foot{position:absolute;left:5%;bottom:5%;right:5%;display:flex;justify-content:space-between;font:11px var(--sans);color:var(--grey)}
+svg{display:block}
+.mark-ink{stroke:var(--ink)} .ribbon{fill:var(--moss)}
+.wordmark{font-family:var(--serif);font-weight:600;letter-spacing:-.03em;line-height:1}
+
+/* 01 cover */
+.cover{gap:clamp(16px,3vw,32px)} .cover .wordmark{font-size:clamp(44px,8vw,88px)}
+/* 02 construction */
+.grid line{stroke:var(--rule);stroke-width:.15} .guide{stroke:var(--moss);stroke-width:.12;stroke-dasharray:.6 .6;fill:none}
+.note{font-family:var(--sans);font-size:1.5px;fill:var(--grey)} /* SVG user units, not screen px */
+/* 03 application */
+.browser{width:92%;background:#fff;border:1px solid var(--rule);border-radius:10px;box-shadow:0 12px 30px rgba(29,29,26,.08);overflow:hidden}
+.bar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--rule);background:var(--paper)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--rule)}
+.url{margin-left:8px;flex:1;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:2px 8px;font:11px var(--sans);color:var(--grey)}
+.app{padding:12px 14px 16px}
+.app .top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.app .top .wordmark{font-size:18px}
+.search{flex:1;border:1px solid var(--rule);border-radius:7px;padding:4px 8px;font:11px var(--sans);color:var(--grey)}
+.btn{background:var(--moss);color:#fff;border-radius:7px;padding:4px 10px;font:600 11px var(--sans)}
+.row{padding:7px 4px;border-bottom:1px solid var(--rule)} .row b{font:500 12px var(--sans);color:var(--moss)}
+.row small{display:block;font:11px var(--sans);color:var(--grey)}
+.chip{display:inline-block;background:#efede6;border-radius:99px;padding:0 7px;margin-right:4px;font:11px var(--sans);color:var(--ink)}
+.chip.on{background:var(--moss);color:#fff}
+/* 04 essence */
+.essence{gap:clamp(10px,1.8vw,18px);padding:13% 6% 12%}
+.tag{font:600 clamp(26px,4.2vw,46px)/1.05 var(--serif);letter-spacing:-.025em;text-align:center;text-wrap:balance}
+.tag em{color:var(--moss);font-style:italic}
+.sw{display:flex;gap:8px} .sw div{width:clamp(30px,5vw,48px);aspect-ratio:1;border-radius:8px;position:relative}
+.sw span{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font:9px var(--sans);color:var(--grey);white-space:nowrap}
+.sw.light{margin-bottom:6px} .type{font:12px var(--sans);color:var(--grey);text-align:center}
+.type b{font:600 22px var(--serif);color:var(--ink);margin-right:6px}
+</style>
+<body>
+<main class="board">
+
+  <section class="panel cover" aria-label="Logo cover">
+    <span class="label">01 / mark</span>
+    <svg viewBox="0 0 44 32" width="220" height="160" role="img" aria-label="marks logo: four tally strokes and a ribbon">
+      <path class="mark-ink" d="M5 5v22M13 5v22M21 5v22M29 5v22" fill="none" stroke-width="4" stroke-linecap="round"/>
+      <path class="ribbon" d="M34 3h8v26l-4-4-4 4z"/>
+    </svg>
+    <div class="wordmark">marks</div>
+    <span class="foot"><span>marks · brand guidelines</span><span>2026</span></span>
+  </section>
+
+  <section class="panel" aria-label="Logo construction">
+    <span class="label">02 / construction</span>
+    <svg viewBox="-2 -2 48 38" width="100%" style="max-width:440px" role="img" aria-label="Construction grid for the marks logo">
+      <g class="grid">
+        <line x1="0" y1="0" x2="44" y2="0"/><line x1="0" y1="4" x2="44" y2="4"/><line x1="0" y1="8" x2="44" y2="8"/>
+        <line x1="0" y1="16" x2="44" y2="16"/><line x1="0" y1="24" x2="44" y2="24"/><line x1="0" y1="28" x2="44" y2="28"/><line x1="0" y1="32" x2="44" y2="32"/>
+        <line x1="0" y1="0" x2="0" y2="32"/><line x1="5" y1="0" x2="5" y2="32"/><line x1="13" y1="0" x2="13" y2="32"/><line x1="21" y1="0" x2="21" y2="32"/>
+        <line x1="29" y1="0" x2="29" y2="32"/><line x1="34" y1="0" x2="34" y2="32"/><line x1="42" y1="0" x2="42" y2="32"/><line x1="44" y1="0" x2="44" y2="32"/>
+      </g>
+      <path class="mark-ink" d="M5 5v22M13 5v22M21 5v22M29 5v22" fill="none" stroke-width="4" stroke-linecap="round"/>
+      <path class="ribbon" d="M34 3h8v26l-4-4-4 4z"/>
+      <circle class="guide" cx="5" cy="5" r="2"/><circle class="guide" cx="13" cy="5" r="2"/><circle class="guide" cx="21" cy="5" r="2"/><circle class="guide" cx="29" cy="5" r="2"/>
+      <path class="guide" d="M34 25l4 4 4-4"/>
+      <text class="note" x="0" y="35.5">stroke 4 · gap 4 · ribbon 8 · notch 4</text>
+    </svg>
+    <span class="foot"><span>four strokes, one ribbon</span><span>tally + bookmark</span></span>
+  </section>
+
+  <section class="panel" aria-label="Digital application">
+    <span class="label">03 / application</span>
+    <div class="browser">
+      <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="url">localhost:4040</span></div>
+      <div class="app">
+        <div class="top">
+          <svg viewBox="0 0 44 32" width="22" height="16" aria-hidden="true"><path class="mark-ink" d="M5 5v22M13 5v22M21 5v22M29 5v22" fill="none" stroke-width="4" stroke-linecap="round"/><path class="ribbon" d="M34 3h8v26l-4-4-4 4z"/></svg>
+          <span class="wordmark">marks</span><span class="search">Search title, note, page text</span><span class="btn">Search</span>
+        </div>
+        <div class="row"><b>Reading list for the week</b><small>example.org · <span class="chip on">reading</span><span class="chip">design</span> · 2d ago</small></div>
+        <div class="row"><b>SQLite full-text search notes</b><small>sqlite.org · <span class="chip">database</span> · 5d ago</small></div>
+        <div class="row" style="border:0"><b>A field guide to paper</b><small>press.test · <span class="chip">type</span><span class="chip">print</span> · 1w ago</small></div>
+      </div>
+    </div>
+    <span class="foot"><span>quiet, paper, ink</span><span>one accent</span></span>
+  </section>
+
+  <section class="panel essence" aria-label="Brand essence, palette and type">
+    <span class="label">04 / essence</span>
+    <div class="tag">Keep your <em>place.</em></div>
+    <div>
+      <div class="sw light" aria-label="Light theme colours">
+        <div style="background:#fbfaf7;box-shadow:inset 0 0 0 1px var(--rule)"><span title="paper">#fbfaf7</span></div>
+        <div style="background:#1d1d1a"><span title="ink">#1d1d1a</span></div>
+        <div style="background:#2f6f5e"><span title="moss">#2f6f5e</span></div>
+        <div style="background:#6d6c66"><span title="grey">#6d6c66</span></div>
+      </div>
+      <div class="sw" style="margin-top:22px" aria-label="Dark theme colours">
+        <div style="background:#131412"><span title="night">#131412</span></div>
+        <div style="background:#ecebe6"><span title="page">#ecebe6</span></div>
+        <div style="background:#6fbfa6"><span title="moss">#6fbfa6</span></div>
+        <div style="background:#9a9990"><span title="grey">#9a9990</span></div>
+      </div>
+    </div>
+    <p class="type" style="margin:14px 0 0"><b>Aa</b> Iowan Old Style + system sans</p>
+    <span class="foot"><span>light first, dark follows</span><span>local fonts only</span></span>
+  </section>
+
+</main>
+</body>

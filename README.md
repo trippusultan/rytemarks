@@ -33,3 +33,7 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 ## Backups and auto-start
 
 `npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run marks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
+
+## Brand
+
+The look is defined in `docs/brand/brand-board.html` (open it in a browser): light editorial, paper / ink / moss, a tally-mark logo (four strokes and a ribbon), a local serif for the name and headings, system sans for everything else, light first with dark following the system. The app's header mark, favicon and palette use the same paths and hex values; `test-brand.js` keeps the two in sync.

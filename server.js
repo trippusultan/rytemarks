@@ -230,14 +230,17 @@ const safeBack = s => {
 const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
-const CSS = `:root{color-scheme:light dark;--bg:#fbfaf7;--fg:#1d1d1a;--mut:#6d6c66;--line:#e6e4dd;--acc:#2f6f5e;--on-acc:#ffffff;--chip:#efede6;--hover:#f4f2ec;--bad:#b4472b}
+const CSS = `:root{color-scheme:light dark;--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;--bg:#fbfaf7;--fg:#1d1d1a;--mut:#6d6c66;--line:#e6e4dd;--acc:#2f6f5e;--on-acc:#ffffff;--chip:#efede6;--hover:#f4f2ec;--bad:#b4472b}
 @media(prefers-color-scheme:dark){:root{--bg:#131412;--fg:#ecebe6;--mut:#9a9990;--line:#2a2b27;--acc:#6fbfa6;--on-acc:#0f1a16;--chip:#22241f;--hover:#1a1c18;--bad:#e58a6b}}
 body{background:var(--bg);color:var(--fg);font:15px/1.55 "Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:1000px;margin:0 auto;padding:1rem 1.25rem 3rem}
-h2,h3{font-weight:600;letter-spacing:-.015em;line-height:1.25;text-wrap:balance}
+h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.015em;line-height:1.25;text-wrap:balance}
 a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
-header>a{color:var(--fg);font-size:1.15rem;font-weight:600;letter-spacing:-.02em}
+.brand{display:flex;align-items:center;gap:.55rem;color:var(--fg)}.brand:hover{text-decoration:none}
+.mark{display:block}
+.wordmark{font-family:var(--serif);font-size:1.45rem;font-weight:600;letter-spacing:-.02em;line-height:1}
+.tagline{font-family:var(--serif);font-size:1.15rem;color:var(--acc);margin:.25rem 0 .75rem}
 header form{flex:1;display:flex;gap:.5rem;min-width:14rem}header input{flex:1}
 input,textarea,button{font:inherit;padding:.45rem .65rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
 button{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500;cursor:pointer}button:hover{filter:brightness(1.08)}
@@ -268,14 +271,17 @@ button,.chip,a,li.b{transition:background-color .15s,color .15s,border-color .15
 button:active,.chip:active{transform:scale(.98)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}button:active,.chip:active{transform:none}}
 .skip{position:absolute;left:-999px;top:0}.skip:focus{left:.75rem;top:.75rem;background:var(--acc);color:var(--on-acc);padding:.4rem .7rem;border-radius:8px;z-index:1}`;
-const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6f5e'/%3E%3Cpath d='M10 7h12v18l-6-4.5L10 25z' fill='%23fff'/%3E%3C/svg%3E`;
+// The brand mark (docs/brand/brand-board.html is the design source): four ink tally strokes and a moss ribbon,
+// so it reads as a hand tally and as a bookmark ribbon at once. Ink follows the text colour, the ribbon the accent.
+const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
+const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6f5e'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
 <meta name=description content="Your personal bookmark archive: saved pages, tags, notes and full-text search on your own machine.">
 <meta name=theme-color content="#fbfaf7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#131412" media="(prefers-color-scheme: dark)">
 <link rel=icon href="${FAVICON}"><style>${CSS}</style>
-${h`<a class=skip href="#main">Skip to content</a><header><a href="/"><b>marks</b></a>
+${h`<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>
 <form action="/" role=search><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
 <main id=main>${body}</main>
 <footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
@@ -328,7 +334,7 @@ app.get('/', (req, res) => {
     ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
     ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>
-    ${empty && h`<div class=empty><h3>Nothing saved yet</h3><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
+    ${empty && h`<div class=empty><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>
     <aside aria-label="Tags and status"><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
