@@ -63,7 +63,10 @@ test('deferred minors', async t => {
 
   await t.test('at most 10 background fetches run at once; the rest stay pending for Archive', async () => {
     for (let i = 0; i < 12; i++) await s.postRaw('/save', new URLSearchParams({ url: s.fake + '/cap' + i }));
-    await new Promise(r => setTimeout(r, 300));
+    // wait for the 10 allowed fetches to actually arrive (a slow CI runner can need well over 300ms), then give a
+    // possible 11th a moment to show up: the cap means it must not
+    for (let waited = 0; hits < 10 && waited < 5000; waited += 25) await new Promise(r => setTimeout(r, 25));
+    await new Promise(r => setTimeout(r, 200));
     assert.equal(hits, 10);
     releaseCap();
     await s.settled();

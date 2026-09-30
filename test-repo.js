@@ -78,7 +78,8 @@ test('github-ready repository', async t => {
   });
 
   await t.test('no personal mailbox address or home-directory path is left in the repository files', () => {
-    const skip = new Set(['node_modules', 'backups', '.superpowers', 'superpowers']); // docs/superpowers (design history) is not published
+    // .git exists in a published clone (it records where the clone came from); docs/superpowers (design history) is not published
+    const skip = new Set(['node_modules', 'backups', '.superpowers', 'superpowers', '.git']);
     const hits = [];
     const walk = dir => {
       for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
