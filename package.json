@@ -1,0 +1,25 @@
+{
+  "name": "marks",
+  "version": "1.0.0",
+  "description": "Personal bookmark manager",
+  "main": "server.js",
+  "scripts": {
+    "test": "node --test test.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.2.1",
+    "jsdom": "^30.0.1",
+    "metascraper": "^5.58.1",
+    "metascraper-description": "^5.56.2",
+    "metascraper-image": "^5.56.2",
+    "metascraper-title": "^5.56.2",
+    "node-cron": "^4.6.0"
+  },
+  "private": "true"
+}
