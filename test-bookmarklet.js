@@ -15,14 +15,14 @@ test('bookmarklet robustness', async t => {
   });
 
   await t.test('GET /save?url= auto-submits the POST form, but does not save by itself', async () => {
-    const html = await s.get(`/save?url=${encodeURIComponent(s.fake + '/article')}`);
+    const html = await s.get(`/save?t=${s.token}&url=${encodeURIComponent(s.fake + '/article')}`);
     assert.match(html, /<form id=f method=post action="\/save">/);
     assert.match(html, /getElementById\('f'\)\.submit\(\)/);
     assert.equal(count(), 0);
   });
 
   await t.test('a missing address explains what happened and how to fix it', async () => {
-    const res = await fetch(s.base + '/save');
+    const res = await fetch(s.base + '/save?t=' + s.token);
     assert.equal(res.status, 400);
     const html = await res.text();
     assert.match(html, /No web address arrived/);
@@ -31,7 +31,7 @@ test('bookmarklet robustness', async t => {
   });
 
   await t.test('a bad address is echoed back, escaped', async () => {
-    const res = await fetch(s.base + '/save?url=' + encodeURIComponent('<script>alert(1)</script>'));
+    const res = await fetch(s.base + '/save?t=' + s.token + '&url=' + encodeURIComponent('<script>alert(1)</script>'));
     assert.equal(res.status, 400);
     const html = await res.text();
     assert.match(html, /&#60;script&#62;alert\(1\)/);

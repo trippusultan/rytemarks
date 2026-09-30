@@ -30,6 +30,10 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 - **Undo**: deleting a bookmark shows an Undo button on the next page (one level, 5 minutes, held in memory).
 - **Export**: `/export?format=json` (everything, including page text) or `/export?format=csv` (no page text, since cells that large break spreadsheets; risky leading `= + - @` are prefixed with `'`).
 
+## Save button key
+
+The save button carries a secret key (36 hex characters in `marks.db.token` beside the database, never committed), so a web page you happen to visit cannot open `/save` and make the server fetch URLs. A save button from before the key existed shows "Save link out of date": delete it and drag the new one from the Save button page. Deleting the token file makes a new key on the next start (then reinstall the button). The home page add box and the palette save need no key; they are allowed because they come from rytemarks itself.
+
 ## Importing, folders and restoring
 
 Import takes a browser bookmarks export (`.html`) or rytemarks' own JSON export. Folder names in a browser export become tags ("Bookmarks bar", "Other bookmarks" and similar root folders are ignored). To restore from a backup export: stop the server, move `marks.db` aside, start it (it creates an empty one), open Import and choose a file from Export JSON. Bookmarks, tags, notes and archived page text come back; links you already have are skipped.

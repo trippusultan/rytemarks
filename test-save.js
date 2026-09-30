@@ -6,10 +6,10 @@ test('saving without the bookmarklet', async t => {
   const s = await setup(t);
 
   await t.test('GET /save asks first and never saves', async () => {
-    const html = await s.get(`/save?url=${encodeURIComponent(s.fake + '/article')}`);
+    const html = await s.get(`/save?t=${s.token}&url=${encodeURIComponent(s.fake + '/article')}`);
     assert.match(html, /<form id=f method=post action="\/save">/);
     assert.equal(s.db.prepare('SELECT count(*) n FROM bookmarks').get().n, 0);
-    assert.equal((await fetch(s.base + '/save?url=javascript:alert(1)')).status, 400);
+    assert.equal((await fetch(s.base + '/save?t=' + s.token + '&url=javascript:alert(1)')).status, 400);
   });
 
   await t.test('bookmarklet page shows both variants', async () => {

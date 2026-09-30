@@ -22,10 +22,11 @@ async function setup(t, routes = {}) {
     res.writeHead(404).end();
   }).listen(0, '127.0.0.1');
   const srv = server.app.listen(0, '127.0.0.1');
-  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); require('node:fs').rmSync(process.env.MARKS_BACKUPS, { recursive: true, force: true }); });
+  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); require('node:fs').rmSync(process.env.MARKS_DB + '.token', { force: true }); require('node:fs').rmSync(process.env.MARKS_BACKUPS, { recursive: true, force: true }); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
-  const postRaw = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });
+  // Posts look like they come from our own pages (Origin = our base) unless a test overrides it; an empty value means "send none".
+  const postRaw = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: Object.fromEntries(Object.entries({ 'content-type': 'application/x-www-form-urlencoded', origin: base, ...headers }).filter(([, v]) => v !== '')) });
   const post = async (p, body, headers) => { const r = await postRaw(p, body, headers); if (p === '/save') await server.settled(); return r; };
   const get = async p => (await fetch(base + p)).text();
   return { ...server, base, fake, post, postRaw, get, state };

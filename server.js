@@ -1,4 +1,6 @@
 const path = require('node:path');
+const fs = require('node:fs');
+const crypto = require('node:crypto');
 const express = require('express');
 const Database = require('better-sqlite3');
 const cron = require('node-cron');
@@ -20,6 +22,15 @@ const UA = 'Mozilla/5.0 (compatible; rytemarks personal bookmark archiver)';
 // One file, default rollback journal (no -wal sidecar), so copying it while idle is a valid backup.
 const db = new Database(process.env.MARKS_DB || path.join(__dirname, 'marks.db'));
 db.pragma('foreign_keys = ON');
+// A secret only your own save button knows, so a web page you visit cannot open /save and make the server fetch URLs.
+const TOKEN_FILE = `${db.name}.token`;
+const TOKEN = (() => {
+  try { const t = fs.readFileSync(TOKEN_FILE, 'utf8').trim(); if (/^[0-9a-f]{36}$/.test(t)) return t; } catch { /* first run */ }
+  const t = crypto.randomBytes(18).toString('hex');
+  fs.writeFileSync(TOKEN_FILE, t, { mode: 0o600 });
+  return t;
+})();
+const tokenOk = v => typeof v === 'string' && v.length === TOKEN.length && crypto.timingSafeEqual(Buffer.from(v), Buffer.from(TOKEN));
 db.exec(`
 CREATE TABLE IF NOT EXISTS bookmarks(
   id INTEGER PRIMARY KEY, url TEXT NOT NULL UNIQUE,
@@ -263,8 +274,8 @@ const safeBack = s => {
 // target=_blank as a bare GET and drop the POST body. /save then auto-submits the real POST itself.
 const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
 const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
-const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
-const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
+const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)+'&t=${TOKEN}';if(!window.open(u))location=u})()`;
+const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)+'&t=${TOKEN}'`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
 const CSS = `:root{color-scheme:light dark;--r:8px;--sb:color-mix(in srgb,var(--mut) 75%,transparent);--mono:"Cascadia Mono","Cascadia Code","JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;--ui:var(--mono);--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c;--glow:6%;--grain:.05}
 @media(prefers-color-scheme:dark){:root{--bg:#0a1013;--surface:#111a1e;--fg:#e7f0f2;--mut:#8fa2a9;--line:#223037;--acc:#3fe0bd;--on-acc:#03211a;--chip:#19252a;--hover:#152127;--bad:#ff8b6e;--glow:18%;--grain:.06}}
@@ -596,6 +607,7 @@ const badUrl = (res, given) => messagePage(res, 400, "Couldn't save that", given
   : h`<p>No web address arrived. If you clicked the save bookmark, your browser dropped it: <a href="/bookmarklet">install the newer bookmark</a>, or paste the address on the <a href="/">home page</a>.</p>`);
 
 app.get('/save', (req, res) => {
+  if (!tokenOk(req.query.t)) return messagePage(res, 403, 'Save link out of date', h`<p class=meta>This save button does not carry the current key. Reinstall it from the <a href="/bookmarklet">Save button page</a> (drag the new one to your bookmarks bar and delete the old one).</p>`);
   const url = cleanUrl(req.query.url);
   if (!url) return badUrl(res, req.query.url);
   res.send(page('Save', h`<h2>Saving…</h2><p class=meta>${url}</p>
@@ -611,10 +623,13 @@ app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`${pageHead(
 <h3>If the button is blocked</h3><p class=meta>Some sites block pop-ups. This variant works in the same tab; drag it the same way.</p>
 <p class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET_GET))}">+ Save to rytemarks (simple)</a><button type=button class=ghost data-copy=code-get>${ic('copy')}<span class=bl>Copy code</span></button></p>
 <details class=howto><summary>${ic('caret-right')}Show the simple code</summary><textarea id=code-get readonly rows=3 onclick="this.select()">${BOOKMARKLET_GET}</textarea></details>
-<p class=meta>Have an older save bookmark that says "No web address arrived"? Delete it and install this one.</p>
+<p class=meta>Have an older save bookmark that says "No web address arrived" or "Save link out of date"? Delete it and install this one.</p>
 <script>document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{const ta=document.getElementById(b.dataset.copy);try{await navigator.clipboard.writeText(ta.value)}catch(e){const d=ta.closest('details');if(d)d.open=true;ta.select();document.execCommand('copy')}const l=b.querySelector('.bl'),t=l.textContent;l.textContent='Copied';setTimeout(()=>{l.textContent=t},1600)}))</script>`)));
 
 app.post('/save', (req, res) => {
+  const self = `http://${req.headers.host}`, o = req.headers.origin;
+  const ours = o ? o === self : (req.headers.referer || '').startsWith(self + '/'); // browsers always send Origin on POST; Referer is the fallback
+  if (!tokenOk(req.body?.t) && !ours) return messagePage(res, 403, 'Not allowed', h`<p class=meta>Saves must come from rytemarks itself or from your save button.</p>`);
   const url = cleanUrl(req.body?.url);
   if (!url) return badUrl(res, req.body?.url);
   const r = insertBm.run({ url, title: '', description: '', image: '', favicon: '', note: '', text: '', saved_at: now(), status: null, checked_at: null, archived_at: null });
@@ -800,7 +815,7 @@ app.get('/export', (req, res) => {
 
 app.use((req, res) => messagePage(res, 404, 'Page not found', h`<p class=meta>Nothing lives at ${req.path}.</p>`));
 
-module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, parseImport, settled, ago, undo, safeBack };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, parseImport, settled, ago, undo, safeBack, token: TOKEN };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`rytemarks: http://localhost:${PORT}  db: ${db.name}`));

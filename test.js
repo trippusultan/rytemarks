@@ -20,11 +20,11 @@ test('bookmark manager end to end', async t => {
     res.writeHead(404).end();
   }).listen(0, '127.0.0.1');
   const srv = app.listen(0, '127.0.0.1');
-  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); });
+  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); require('node:fs').rmSync(process.env.MARKS_DB + '.token', { force: true }); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
   const post = async (p, body, headers = {}) => {
-    const r = await fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });
+    const r = await fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', origin: base, ...headers } });
     if (p === '/save') await settled();
     return r;
   };

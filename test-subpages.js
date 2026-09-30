@@ -205,7 +205,7 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
     const html = await nf.text();
     assert.match(html, /<h1>Page not found<\/h1>/);
     assert.match(html, /<div class=msg><p class=meta>Nothing lives at \/nope\.<\/p><form action="\/" role=search class=msg-search><label class=sr for=msg-q>Search your bookmarks<\/label><input id=msg-q type=search name=q placeholder="Search bookmarks"><button>Search<\/button><\/form><p class=links><a href="\/">Back to your bookmarks<\/a><a href="\/tags">Tags<\/a><\/p><\/div>/);
-    const bad = await fetch(s.base + '/save');
+    const bad = await fetch(s.base + '/save?t=' + s.token);
     assert.equal(bad.status, 400);
     const badHtml = await bad.text();
     assert.match(badHtml, /<h1>Couldn&#39;t save that<\/h1>/);
