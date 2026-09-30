@@ -40,9 +40,9 @@ test('icons, navbar, tab bar, footer', async t => {
     }
   });
 
-  await t.test('navbar: brand, icon+label links with the current page marked, search button and Add on the right', async () => {
+  await t.test('navbar: brand, icon+label links with the current page marked, only Add on the right (no search button)', async () => {
     const nav = `<nav aria-label="Primary" class=topnav><a href="/" aria-current=page>${svg('bookmarks-simple')}<span>Bookmarks</span></a><a href="/tags">${svg('tag')}<span>Tags</span></a><a href="/import">${svg('tray-arrow-down')}<span>Import</span></a></nav>`;
-    const actions = `<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${svg('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${svg('plus')}<span>Add</span></a></div></header>`;
+    const actions = `<div class=hactions><a class="btn addbtn" href="/#add-url">${svg('plus')}<span>Add</span></a></div></header>`;
     has(home, nav + actions);
     has(await s.get('/tags'), `<a href="/">${svg('bookmarks-simple')}<span>Bookmarks</span></a><a href="/tags" aria-current=true>`.replace('aria-current=true', 'aria-current=page'));
     const header = /<header>[\s\S]*?<\/header>/.exec(home)[0];
@@ -51,8 +51,8 @@ test('icons, navbar, tab bar, footer', async t => {
     assert.doesNotMatch(/<nav aria-label="Primary" class=topnav>.*?<\/nav>/.exec(nope)[0], /aria-current/);
   });
 
-  await t.test('tab bar for phones: Bookmarks, Tags, Add, Import with icons and labels', async () => {
-    has(home, `<nav aria-label="Tabs" class=tabbar><a href="/" aria-current=page>${svg('bookmarks-simple')}<span>Bookmarks</span></a><a href="/tags">${svg('tag')}<span>Tags</span></a><a class=tabadd href="/#add-url">${svg('plus')}<span>Add</span></a><a href="/import">${svg('tray-arrow-down')}<span>Import</span></a></nav>`);
+  await t.test('tab bar for phones: Bookmarks, Tags, Import with icons and labels (no Add tab)', async () => {
+    has(home, `<nav aria-label="Tabs" class=tabbar><a href="/" aria-current=page>${svg('bookmarks-simple')}<span>Bookmarks</span></a><a href="/tags">${svg('tag')}<span>Tags</span></a><a href="/import">${svg('tray-arrow-down')}<span>Import</span></a></nav>`);
     has(await s.get('/import'), `<a href="/import" aria-current=page>${svg('tray-arrow-down')}<span>Import</span></a></nav>`);
   });
 
@@ -65,21 +65,17 @@ test('icons, navbar, tab bar, footer', async t => {
     assert.match(block, /\.tabbar\{[^}]*position:fixed[^}]*bottom:0[^}]*display:grid/);
     assert.match(block, /body\{[^}]*padding-bottom:5rem/);
     assert.match(block, /\.toast\{[^}]*bottom:calc\(5\.25rem/);
-    assert.match(block, /\.searchbtn \.kbd\{display:none\}/);
     assert.match(block, /[{}]\.btn\.addbtn\{display:none\}/); // must match the base rule's specificity (.btn.addbtn), or the top-bar Add stays beside the tab bar's Add
     assert.match(css, /@media\(prefers-reduced-transparency:reduce\)\{[^@]*\.tabbar[^{]*\{[^}]*backdrop-filter:none/);
     assert.match(css, /\.tabbar a\[aria-current=page\]\{[^}]*color:var\(--acc\)/);
   });
 
-  await t.test('behaviour: Add focuses the field, a #add-url link focuses on load, the search button opens the palette, / opens it where there is no field', async () => {
+  await t.test('behaviour: Add focuses the field, a #add-url link focuses on load, / opens the palette where there is no field', async () => {
     let win = open(home).window, d = win.document;
     d.querySelector('.addbtn').click();
     assert.equal(d.activeElement.id, 'add-url');
     d = open(home, { url: 'http://localhost/#add-url' }).window.document;
     assert.equal(d.activeElement.id, 'add-url');
-    win = open(home).window; d = win.document;
-    d.getElementById('open-palette').click();
-    assert.ok(d.getElementById('palette').open || d.getElementById('palette').hasAttribute('open'));
     win = open(home).window; d = win.document;
     key(win, d.body, '/');
     assert.equal(d.activeElement.name, 'q', 'home: / focuses the inline search field');

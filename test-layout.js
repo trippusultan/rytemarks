@@ -18,7 +18,17 @@ test('layout: three-zone header, centred column, centred footer, roomier phone n
     assert.doesNotMatch(css, /\.topnav\{[^}]*margin-right:auto/, 'nav no longer hugs the logo');
     assert.match(css, /\.topnav a\{[^}]*padding:\.5rem \.9rem/);
     assert.match(css, /\.topnav a\[aria-current=page\]\{[^}]*box-shadow:inset 0 -3px 0 var\(--acc\)/);
-    assert.match(css, /\.searchbtn\{[^}]*min-width:14rem[^}]*padding:\.5rem \.75rem/);
+  });
+
+  await t.test('no search button in the header on any page; only Add stays on the right', async () => {
+    for (const p of ['/', '/tags', '/import', '/bookmarklet', '/nope']) {
+      const page = await s.get(p);
+      const header = /<header>[\s\S]*?<\/header>/.exec(page)[0];
+      assert.doesNotMatch(header, /magnifying-glass|open-palette|searchbtn|Search/, p);
+      assert.match(header, /<div class=hactions><a class="btn addbtn" href="\/#add-url">.*<\/a><\/div><\/header>/, p);
+      assert.doesNotMatch(page, /class=kbd|Ctrl K/, p);
+    }
+    assert.doesNotMatch(css, /\.searchbtn|\.kbd\{/);
   });
 
   await t.test('one centred 1120px column for header, page and footer', () => {
@@ -42,21 +52,19 @@ test('layout: three-zone header, centred column, centred footer, roomier phone n
     assert.match(css, /\.fr2\{[^}]*justify-content:center[^}]*gap:\.6rem 1\.4rem/);
   });
 
-  await t.test('phone: search is a full-width 44px tap target beside the logo, links live in the tab bar', () => {
-    assert.ok(phoneAt > css.indexOf('.tabbar{display:none}') && phoneAt > css.indexOf('header{position:sticky'), 'phone block comes after the base rules');
-    assert.match(phone, /header\{[^}]*grid-template-columns:auto 1fr[^}]*padding:\.6rem 1rem/);
-    assert.match(phone, /\.hactions\{[^}]*justify-self:stretch/);
-    assert.match(phone, /\.searchbtn\{[^}]*width:100%[^}]*min-height:44px/);
-    assert.match(phone, /\.searchbtn \.kbd\{display:none\}/);
-    assert.doesNotMatch(phone, /\.searchbtn \.lbl/, 'the "Search" label stays visible on phones');
+  await t.test('phone: the header is just the centred logo (no actions), links live in the tab bar', () => {
+    assert.ok(phoneAt > css.indexOf('.tabbar{display:none}') && phoneAt > css.indexOf('header{position:sticky') && phoneAt > css.indexOf('.brand{'), 'phone block comes after the base rules');
+    assert.match(phone, /header\{[^}]*grid-template-columns:1fr[;}][^}]*justify-items:center[^}]*padding:\.6rem 1rem/);
+    assert.match(phone, /\.brand\{[^}]*justify-self:center/);
+    assert.match(phone, /\.hactions\{display:none\}/);
   });
 
-  await t.test('phone tab bar: taller, pill on the current tab, raised Add, page and toast clear it', () => {
-    assert.match(phone, /\.tabbar\{[^}]*min-height:60px[^}]*calc\(\.4rem \+ env\(safe-area-inset-bottom\)\)/);
+  await t.test('phone tab bar: three tabs (no Add), taller, pill on the current tab, page and toast clear it', () => {
+    assert.match(phone, /\.tabbar\{[^}]*grid-template-columns:repeat\(3,1fr\)[^}]*min-height:60px[^}]*calc\(\.4rem \+ env\(safe-area-inset-bottom\)\)/);
+    assert.doesNotMatch(css, /tabadd/);
     assert.match(phone, /body\{[^}]*padding-bottom:5rem/);
     assert.match(phone, /\.toast\{[^}]*bottom:calc\(5\.25rem \+ env\(safe-area-inset-bottom\)\)/);
     assert.match(css, /\.tabbar a\[aria-current=page\]\{[^}]*background:color-mix\(in srgb,var\(--acc\) 9%,transparent\)/); // small enough tint that acc text keeps 4.5:1
-    assert.match(css, /\.tabbar \.tabadd\{[^}]*transform:translateY\(-10px\)[^}]*box-shadow:/);
     assert.match(css, /\.tabbar \.ic\{font-size:1\.5em\}/);
   });
 });

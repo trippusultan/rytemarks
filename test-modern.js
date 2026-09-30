@@ -42,7 +42,7 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
   });
 
   await t.test('Ctrl+K command palette: filters, searches, jumps to tags, saves a URL', () => {
-    assert.match(html, /<a class=searchbtn id=open-palette href="\/" aria-label="Search bookmarks">/);
+    assert.doesNotMatch(html, /id=open-palette/, 'no header button: the palette is keyboard-driven (Ctrl/Cmd+K, or / where there is no search field)');
     const dom = open(), win = dom.window, d = win.document;
     const dlg = d.getElementById('palette'), inp = d.getElementById('pal-q');
     key(win, d, 'k', { ctrlKey: true });

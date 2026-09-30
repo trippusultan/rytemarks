@@ -265,16 +265,13 @@ footer{max-width:1120px;width:100%;margin:0 auto;padding:2.5rem 1.25rem 3.5rem;b
 .topnav a:hover{background:var(--hover);color:var(--fg);text-decoration:none}
 .topnav a[aria-current=page]{color:var(--fg);background:var(--chip);box-shadow:inset 0 -3px 0 var(--acc)}
 .hactions{display:flex;align-items:center;gap:.6rem;justify-self:end}
-.searchbtn{display:flex;align-items:center;gap:.5rem;min-width:14rem;padding:.5rem .75rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--mut)}
-.searchbtn:hover{border-color:var(--acc);color:var(--fg);text-decoration:none}.searchbtn .lbl{flex:1}
 .tabbar{display:none}
 .tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;padding:.45rem .25rem;border-radius:var(--r);color:var(--mut);font-size:11px;font-weight:500}
 .tabbar a:hover{text-decoration:none;color:var(--fg)}.tabbar a[aria-current=page]{color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
-.tabbar .tabadd{color:var(--on-acc);background:var(--acc);transform:translateY(-10px);box-shadow:0 6px 16px color-mix(in srgb,var(--acc) 35%,transparent)}.tabbar .ic{font-size:1.5em}
+.tabbar .ic{font-size:1.5em}
 .field{display:flex;flex:1;align-items:center;gap:.4rem;padding-right:.4rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .field:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 .field input{flex:1;border:0;background:transparent;outline:none}
-.kbd{background:var(--chip);color:var(--mut);border:1px solid var(--line);padding:.1rem .45rem;font:11px var(--mono);font-weight:500;white-space:nowrap}
 input,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--fg)}
 button{font:inherit;padding:.5rem .85rem;border:1px solid var(--acc);border-radius:var(--r);background:var(--acc);color:var(--on-acc);font-weight:600;cursor:pointer}button:hover{filter:brightness(1.08)}
 .layout{display:grid;grid-template-columns:1fr 13rem;gap:2rem;align-items:start}
@@ -417,7 +414,7 @@ button{display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
 .tick{display:flex}.tick .ic{width:1.3em;height:1.3em}
 .dead{display:inline-flex;align-items:center;gap:.25rem}
 a.edit{display:inline-flex;padding:.15rem}a.edit:hover{color:var(--acc)}
-@media(max-width:640px){.topnav{display:none}header{grid-template-columns:auto 1fr;min-height:0;padding:.6rem 1rem}.hactions{justify-self:stretch}.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);gap:.25rem;min-height:60px;padding:.4rem .75rem calc(.4rem + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-top:1px solid var(--line)}body{padding-bottom:5rem}.toast{bottom:calc(5.25rem + env(safe-area-inset-bottom))}.searchbtn{min-width:0;width:100%;min-height:44px}.searchbtn .kbd{display:none}.btn.addbtn{display:none}.bar2{grid-template-columns:1fr}}
+@media(max-width:640px){.topnav{display:none}header{grid-template-columns:1fr;justify-items:center;min-height:0;padding:.6rem 1rem}.brand{justify-self:center}.hactions{display:none}.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);gap:.25rem;min-height:60px;padding:.4rem .75rem calc(.4rem + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-top:1px solid var(--line)}body{padding-bottom:5rem}.toast{bottom:calc(5.25rem + env(safe-area-inset-bottom))}.btn.addbtn{display:none}.bar2{grid-template-columns:1fr}}
 @media(prefers-reduced-transparency:reduce){.tabbar{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 button,.chip,a,.card{transition:background-color .15s,color .15s,border-color .15s,box-shadow .2s,transform .2s cubic-bezier(.16,1,.3,1)}
@@ -439,7 +436,7 @@ const messagePage = (res, status, title, body) => res.status(status).send(page(t
 const NAV = [['home', '/', 'Bookmarks', 'bookmarks-simple'], ['tags', '/tags', 'Tags', 'tag'], ['import', '/import', 'Import', 'tray-arrow-down']];
 const navHtml = cur => h`<nav aria-label="Primary" class=topnav>${NAV.map(([k, href, label, icon]) => h`<a href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${ic(icon)}<span>${label}</span></a>`)}</nav>`;
 // Phones: a fixed bottom tab bar (thumb reach). Add is a real link to the add field, so it also works without JavaScript.
-const tabHtml = cur => h`<nav aria-label="Tabs" class=tabbar>${[NAV[0], NAV[1], ['add', '/#add-url', 'Add', 'plus'], NAV[2]].map(([k, href, label, icon]) => h`<a${k === 'add' ? raw(' class=tabadd') : ''} href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${ic(icon)}<span>${label}</span></a>`)}</nav>`;
+const tabHtml = cur => h`<nav aria-label="Tabs" class=tabbar>${NAV.map(([k, href, label, icon]) => h`<a href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${ic(icon)}<span>${label}</span></a>`)}</nav>`;
 const paletteTags = () => JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c').replace(/'/g, '\\u0027').replace(/&/g, '\\u0026');
 const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
@@ -447,7 +444,7 @@ const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype ht
 <meta name=theme-color content="#f3f6f7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#0a1013" media="(prefers-color-scheme: dark)">
 <script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
 <link rel=icon href="${FAVICON}"><style>${CSS}</style>
-${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>rytemarks</span></a>${navHtml(cur)}<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${ic('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
+${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>rytemarks</span></a>${navHtml(cur)}<div class=hactions><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
 <main id=main>${body}</main>
 <footer><div class=fbar><div class=fl2>${raw(MARK_SVG)}<span>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${ic('github-logo')}@trippusultan</a></span></div>
 <div class=fr2><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">${ic('plus')}Save to rytemarks</a><a href="/bookmarklet">${ic('question')}Install help</a><a href="/export?format=json">${ic('download-simple')}Export JSON</a><a href="/export?format=csv">${ic('download-simple')}Export CSV</a></div></div>
@@ -455,9 +452,8 @@ ${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href=
 ${tabHtml(cur)}
 <dialog id=palette aria-label="Command palette"><div class=palrow>${ic('magnifying-glass')}<input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"></div><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
 <script>(()=>{
-const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save'),openBtn=doc.getElementById('open-palette');
+const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save');
 const ACTIONS=[['Import bookmarks','/import'],['Manage tags','/tags'],['Dead links','/?dead=1'],['Save button (bookmarklet)','/bookmarklet'],['Export JSON','/export?format=json'],['Export CSV','/export?format=csv'],['Home','/']];
-const kb=openBtn&&openBtn.querySelector('.kbd');if(kb&&/Mac|iPhone|iPad/.test(navigator.platform||''))kb.textContent='⌘ K';
 const isOpen=()=>dlg.open||dlg.hasAttribute('open');
 const isUrl=v=>{if(v.includes(' '))return false;try{const u=new URL(v.startsWith('http://')||v.startsWith('https://')?v:'https://'+v);return u.hostname.includes('.')}catch(e){return false}};
 let items=[],sel=0;
@@ -477,9 +473,8 @@ q.addEventListener('keydown',e=>{
   else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+items.length)%Math.max(items.length,1);render()}
   else if(e.key==='Enter'){e.preventDefault();list.querySelector('[aria-selected=true]')?.click()}});
 dlg.addEventListener('click',e=>{if(e.target===dlg&&dlg.close)dlg.close()});
-if(openBtn)openBtn.addEventListener('click',e=>{e.preventDefault();open()});
 const addField=doc.getElementById('add-url');
-doc.querySelectorAll('.addbtn,.tabadd').forEach(a=>a.addEventListener('click',e=>{if(addField){e.preventDefault();if(addField.scrollIntoView)addField.scrollIntoView({block:'center'});addField.focus()}}));
+doc.querySelectorAll('.addbtn').forEach(a=>a.addEventListener('click',e=>{if(addField){e.preventDefault();if(addField.scrollIntoView)addField.scrollIntoView({block:'center'});addField.focus()}}));
 if(addField&&location.hash==='#add-url')addField.focus();
 doc.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();return}
