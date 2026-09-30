@@ -56,6 +56,16 @@ const ftsQuery = q => (String(q).match(/[\p{L}\p{N}_]+/gu) || []).map(t => `"${t
 const silent = () => ({ virtualConsole: new VirtualConsole() });
 
 // ---------- scraping ----------
+const MAX_HTML = 5 * 1024 * 1024; // read at most 5 MB of a page; the rest is never downloaded
+async function readCapped(res, max) {
+  const chunks = [];
+  let n = 0;
+  for await (const c of res.body) {
+    chunks.push(c);
+    if ((n += c.length) > max) break; // leaving the loop cancels the stream
+  }
+  return Buffer.concat(chunks);
+}
 function decodeHtml(buf, contentType) {
   const label = /charset=["']?([\w-]+)/i.exec(contentType || '')?.[1]
     || /<meta[^>]+charset=["']?([\w-]+)/i.exec(buf.subarray(0, 2048).toString('latin1'))?.[1] || 'utf-8';
@@ -66,8 +76,8 @@ async function scrape(url) {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000), headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml' } });
     out.status = res.status;
-    if (!/html/.test(res.headers.get('content-type') || '')) return out;
-    const html = decodeHtml(Buffer.from(await res.arrayBuffer()), res.headers.get('content-type'));
+    if (!/html/.test(res.headers.get('content-type') || '')) { await res.body?.cancel(); return out; }
+    const html = decodeHtml(await readCapped(res, MAX_HTML), res.headers.get('content-type'));
     const meta = await metascraper({ html, url: res.url });
     const dom = new JSDOM(html, { url: res.url, ...silent() });
     const icon = dom.window.document.querySelector('link[rel~="icon" i]')?.getAttribute('href');
@@ -100,7 +110,9 @@ async function enrich(id, url) {
   enrichStmt.run(m.title, domain(url), m.description, m.image, m.favicon, m.text, m.status, now(), now(), id, url);
 }
 const inflight = new Set();
+const MAX_INFLIGHT = 10;
 const enrichInBackground = (id, url) => {
+  if (inflight.size >= MAX_INFLIGHT) return; // stays pending (archived_at NULL); the Archive button picks it up
   const p = enrich(id, url).catch(console.error).finally(() => inflight.delete(p));
   inflight.add(p);
 };
@@ -142,14 +154,15 @@ async function checkLinks() {
 // Fetch page text for bookmarks that never had it (imports). Every attempt is stamped, so a page that
 // yields nothing (404, PDF, no article) is not retried forever. Keeps the user's title and note.
 async function archiveMissing() {
-  const upd = db.prepare(`UPDATE bookmarks SET text = ?, description = coalesce(nullif(?, ''), description),
+  const upd = db.prepare(`UPDATE bookmarks SET
+    title = CASE WHEN title IN ('', ?) THEN coalesce(nullif(?, ''), title) ELSE title END, text = ?, description = coalesce(nullif(?, ''), description),
     image = coalesce(nullif(?, ''), image), favicon = coalesce(nullif(?, ''), favicon),
     status = coalesce(?, status), checked_at = coalesce(?, checked_at), archived_at = ?
     WHERE id = ? AND url = ? AND archived_at IS NULL AND text = ''`); // still pending: never overwrite a concurrent save's result
   let n = 0;
   for (const { id, url } of db.prepare("SELECT id, url FROM bookmarks WHERE archived_at IS NULL AND text = ''").all()) {
     const m = await scrape(url);
-    const r = upd.run(m.text, m.description, m.image, m.favicon, m.status, m.status && now(), m.status && now(), id, url); // no HTTP status = network failure: leave pending for a retry
+    const r = upd.run(domain(url), m.title, m.text, m.description, m.image, m.favicon, m.status, m.status && now(), m.status && now(), id, url); // no HTTP status = network failure: leave pending for a retry
     if (r.changes && m.text) n++;
   }
   return n;
@@ -298,13 +311,13 @@ app.get('/', (req, res) => {
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
     <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
-    ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
+    ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
     ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</main>
-    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag) })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
+    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
 app.get('/save', (req, res) => {
@@ -324,7 +337,7 @@ app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`<h2>Save bu
   <textarea readonly rows=3 style="width:100%" onclick="this.select()">${BOOKMARKLET_GET}</textarea>`)));
 
 app.post('/save', (req, res) => {
-  const url = cleanUrl(req.body.url);
+  const url = cleanUrl(req.body?.url);
   if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
   const r = insertBm.run({ url, title: '', description: '', image: '', favicon: '', note: '', text: '', saved_at: now(), status: null, checked_at: null, archived_at: null });
   const id = db.prepare('SELECT id FROM bookmarks WHERE url = ?').get(url).id;
@@ -370,6 +383,7 @@ app.get('/b/:id', (req, res) => {
 });
 
 app.post('/b/:id', (req, res) => {
+  if (typeof req.body?.note !== 'string') return res.sendStatus(400); // empty POST (body is {} or undefined): never treat it as "clear the note"
   const id = +req.params.id;
   const r = db.prepare('UPDATE bookmarks SET title = coalesce(nullif(?, \'\'), title), note = ? WHERE id = ?')
     .run(String(req.body.title || '').trim(), String(req.body.note || '').trim(), id);
