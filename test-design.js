@@ -54,4 +54,46 @@ test('design rules', async t => {
     assert.match(css, /font-weight:\s*600/); // headings, labels
     assert.match(css, /letter-spacing:\s*-\.\d+em/); // tighter heading tracking
   });
+
+  await t.test('inline favicon, so browsers stop requesting /favicon.ico', () => {
+    assert.match(html, /<link rel=icon href="data:image\/svg\+xml,/);
+  });
+
+  await t.test('meta description and theme-color that match the palette', () => {
+    assert.match(html, /<meta name=description content="[^"]+">/);
+    assert.match(html, new RegExp(`<meta name=theme-color content="${light.bg}" media="\\(prefers-color-scheme: light\\)">`));
+    assert.match(html, new RegExp(`<meta name=theme-color content="${dark.bg}" media="\\(prefers-color-scheme: dark\\)">`));
+  });
+
+  await t.test('landmarks and a skip link that comes first', () => {
+    assert.equal((html.match(/<main[ >]/g) || []).length, 1, 'exactly one <main>');
+    assert.match(html, /<main id=main>/);
+    assert.ok(html.indexOf('class=skip') < html.indexOf('<header>'), 'skip link before header');
+    assert.match(html, /<a class=skip href="#main">Skip to content<\/a>/);
+    assert.match(html, /<form action="\/" role=search>/);
+    assert.match(html, /<aside aria-label="Tags and status">/);
+    assert.match(css, /\.skip:focus\{/);
+  });
+
+  await t.test('pressed feedback and transitions, switched off for reduced motion', () => {
+    assert.match(css, /transition:[^;}]*\.15s/);
+    assert.match(css, /button:active[^{]*\{[^}]*scale\(\.98\)/);
+    assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{[^@]*transition:none/);
+  });
+
+  await t.test('type polish: balanced headings, tabular numerals', () => {
+    assert.match(css, /text-wrap:balance/);
+    assert.match(css, /font-variant-numeric:tabular-nums/);
+  });
+
+  await t.test('unknown URLs get a branded 404 with a way back', async () => {
+    const res = await fetch(s.base + '/nope/%3Cscript%3Ealert(1)%3C/script%3E');
+    assert.equal(res.status, 404);
+    const body = await res.text();
+    assert.match(body, /Page not found/);
+    assert.match(body, /<a href="\/">/);
+    assert.doesNotMatch(body, /<script>alert/);
+    const post = await s.post('/nope', '');
+    assert.equal(post.status, 404);
+  });
 });

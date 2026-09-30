@@ -233,7 +233,7 @@ const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/sv
 const CSS = `:root{color-scheme:light dark;--bg:#fbfaf7;--fg:#1d1d1a;--mut:#6d6c66;--line:#e6e4dd;--acc:#2f6f5e;--on-acc:#ffffff;--chip:#efede6;--hover:#f4f2ec;--bad:#b4472b}
 @media(prefers-color-scheme:dark){:root{--bg:#131412;--fg:#ecebe6;--mut:#9a9990;--line:#2a2b27;--acc:#6fbfa6;--on-acc:#0f1a16;--chip:#22241f;--hover:#1a1c18;--bad:#e58a6b}}
 body{background:var(--bg);color:var(--fg);font:15px/1.55 "Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:1000px;margin:0 auto;padding:1rem 1.25rem 3rem}
-h2,h3{font-weight:600;letter-spacing:-.015em;line-height:1.25}
+h2,h3{font-weight:600;letter-spacing:-.015em;line-height:1.25;text-wrap:balance}
 a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
@@ -262,13 +262,22 @@ form.inline{display:inline}form.inline button{padding:.1rem .5rem;font-size:13px
 .chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:999px;padding:.15rem .65rem;font-size:13px}
 .chip.on{background:var(--acc);color:var(--on-acc)}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}
-form[action$="/delete"] button{background:transparent;color:var(--bad);border-color:var(--bad)}`;
+form[action$="/delete"] button{background:transparent;color:var(--bad);border-color:var(--bad)}
+.meta,aside{font-variant-numeric:tabular-nums}
+button,.chip,a,li.b{transition:background-color .15s,color .15s,border-color .15s,transform .15s}
+button:active,.chip:active{transform:scale(.98)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}button:active,.chip:active{transform:none}}
+.skip{position:absolute;left:-999px;top:0}.skip:focus{left:.75rem;top:.75rem;background:var(--acc);color:var(--on-acc);padding:.4rem .7rem;border-radius:8px;z-index:1}`;
+const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6f5e'/%3E%3Cpath d='M10 7h12v18l-6-4.5L10 25z' fill='%23fff'/%3E%3C/svg%3E`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style>
-${h`<header><a href="/"><b>marks</b></a>
-<form action="/"><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
-${body}
+<meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+<meta name=description content="Your personal bookmark archive: saved pages, tags, notes and full-text search on your own machine.">
+<meta name=theme-color content="#fbfaf7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#131412" media="(prefers-color-scheme: dark)">
+<link rel=icon href="${FAVICON}"><style>${CSS}</style>
+${h`<a class=skip href="#main">Skip to content</a><header><a href="/"><b>marks</b></a>
+<form action="/" role=search><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
+<main id=main>${body}</main>
 <footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
 <a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a> ${jobsHtml()}</footer>
 <script>document.addEventListener('keydown',e=>{const t=e.target.tagName;if(e.key==='/'&&t!=='INPUT'&&t!=='TEXTAREA'){e.preventDefault();document.querySelector('input[name=q]').focus()}})</script>`.s}`;
@@ -315,14 +324,14 @@ app.get('/', (req, res) => {
     ${b.snippet && h`<div class=meta>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</div>`}
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
-    <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
+    <section><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
     ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
     ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
-    ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</main>
-    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
+    ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>
+    <aside aria-label="Tags and status"><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
 const badUrl = (res, given) => res.status(400).send(page('Bad URL', h`<h2>Couldn't save that</h2>
@@ -476,6 +485,9 @@ app.get('/export', (req, res) => {
     res.attachment(`marks-${stamp}.csv`).type('csv').send([cols.join(','), ...rows.map(r => cols.map(c => csvCell(c === 'tags' ? r.tags.join(',') : r[c])).join(','))].join('\r\n') + '\r\n');
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
+
+app.use((req, res) => res.status(404).send(page('Page not found', h`<h2>Page not found</h2>
+  <p class=meta>Nothing lives at ${req.path}.</p><p><a href="/">Back to your bookmarks</a></p>`)));
 
 module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo, safeBack };
 
