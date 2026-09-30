@@ -24,9 +24,10 @@ async function setup(t, routes = {}) {
   t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
-  const post = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });
+  const postRaw = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });
+  const post = async (p, body, headers) => { const r = await postRaw(p, body, headers); if (p === '/save') await server.settled(); return r; };
   const get = async p => (await fetch(base + p)).text();
-  return { ...server, base, fake, post, get, state };
+  return { ...server, base, fake, post, postRaw, get, state };
 }
 
 module.exports = { setup, ARTICLE };

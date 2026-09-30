@@ -85,6 +85,21 @@ async function scrape(url) {
 // ---------- data ----------
 const insertBm = db.prepare(`INSERT OR IGNORE INTO bookmarks(url,title,description,image,favicon,note,text,saved_at,status,checked_at,archived_at)
   VALUES(@url,@title,@description,@image,@favicon,@note,@text,@saved_at,@status,@checked_at,@archived_at)`);
+// Save answers immediately; the page fetch fills in details afterwards. A title the user already typed is kept,
+// and no HTTP status (network failure) leaves archived_at NULL so the Archive button can retry it.
+const enrichStmt = db.prepare(`UPDATE bookmarks SET
+  title = CASE WHEN title = '' THEN coalesce(nullif(?, ''), ?) ELSE title END,
+  description = ?, image = ?, favicon = ?, text = ?, status = ?, checked_at = ?, archived_at = ? WHERE id = ?`);
+async function enrich(id, url) {
+  const m = await scrape(url);
+  enrichStmt.run(m.title, domain(url), m.description, m.image, m.favicon, m.text, m.status, m.status && now(), m.status && now(), id);
+}
+const inflight = new Set();
+const enrichInBackground = (id, url) => {
+  const p = enrich(id, url).catch(console.error).finally(() => inflight.delete(p));
+  inflight.add(p);
+};
+const settled = () => Promise.all([...inflight]);
 const setTags = db.transaction((id, tags) => {
   db.prepare('DELETE FROM bookmark_tags WHERE bookmark_id=?').run(id);
   for (const t of tags) db.prepare('INSERT INTO bookmark_tags VALUES(?,?)').run(id, t);
@@ -258,23 +273,24 @@ app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`<h2>Save bu
   <p><a href="${raw(esc(BOOKMARKLET_GET))}">Save to marks (simple)</a></p>
   <textarea readonly rows=3 style="width:100%" onclick="this.select()">${BOOKMARKLET_GET}</textarea>`)));
 
-app.post('/save', async (req, res) => {
+app.post('/save', (req, res) => {
   const url = cleanUrl(req.body.url);
   if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
-  if (!db.prepare('SELECT 1 FROM bookmarks WHERE url=?').get(url)) {
-    const m = await scrape(url);
-    insertBm.run({ ...m, url, title: m.title || domain(url), note: '', saved_at: now(), checked_at: m.status && now(), archived_at: now() });
-  }
-  res.redirect(303, `/b/${db.prepare('SELECT id FROM bookmarks WHERE url=?').get(url).id}`);
+  const r = insertBm.run({ url, title: '', description: '', image: '', favicon: '', note: '', text: '', saved_at: now(), status: null, checked_at: null, archived_at: null });
+  const id = db.prepare('SELECT id FROM bookmarks WHERE url = ?').get(url).id;
+  if (r.changes) enrichInBackground(id, url);
+  res.redirect(303, `/b/${id}?${r.changes ? 'new' : 'dup'}=1`);
 });
 
 app.get('/b/:id', (req, res) => {
   const b = withTags(db.prepare(`${SELECT} WHERE b.id=?`).get(+req.params.id));
   if (!b) return res.status(404).send(page('Not found', h`<p>No such bookmark.</p>`));
   const tags = JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c');
-  res.send(page(b.title, h`<h2><a href="${b.url}">${b.title}</a></h2><p class=meta>${b.url}</p>
-    <form class=edit method=post action="/b/${b.id}">
-    <label for=title>Title</label><input type=text id=title name=title value="${b.title}">
+  res.send(page(b.title || b.url, h`<h2><a href="${b.url}">${b.title || b.url}</a></h2><p class=meta>${b.url}</p>
+    ${req.query.new && h`<p class=flash role=status>Saved ✓ ${!b.archived_at && 'Fetching the page in the background: add tags now.'}</p>`}
+    ${req.query.dup && h`<p class=flash role=status>Already saved: edit it below.</p>`}
+    <form class=edit method=post action="/b/${b.id}">${req.query.new && h`<input type=hidden name=done value=1>`}
+    <label for=title>Title</label><input type=text id=title name=title value="${b.title}" placeholder="${domain(b.url)}">
     <label for=tags>Tags (comma separated)</label><input type=text id=tags name=tags value="${b.tags.join(', ')}" autocomplete=off list=tl autofocus><datalist id=tl></datalist>
     <label for=note>Note</label><textarea id=note name=note rows=5>${b.note}</textarea>
     <p><button>Save</button> <a href="/">Cancel</a></p></form>
@@ -297,6 +313,7 @@ app.post('/b/:id', (req, res) => {
     .run(String(req.body.title || '').trim(), String(req.body.note || '').trim(), id);
   if (!r.changes) return res.sendStatus(404);
   setTags(id, parseTags(req.body.tags));
+  if (req.body.done) return res.send(page('Saved', h`<p>Saved ✓ You can close this tab.</p><p><a href="/">Open marks</a></p><script>window.close()</script>`));
   res.redirect(303, '/');
 });
 
@@ -358,7 +375,7 @@ app.get('/export', (req, res) => {
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
 
-module.exports = { app, db, checkLinks, archiveMissing, parseNetscape };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`marks: http://localhost:${PORT}  db: ${db.name}`));

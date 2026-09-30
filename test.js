@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 process.env.MARKS_DB = path.join(os.tmpdir(), `marks-test-${process.pid}.db`);
-const { app, db, checkLinks } = require('./server');
+const { app, db, checkLinks, settled } = require('./server');
 
 const para = 'Zanzibarfluff is the unique word in this readable article paragraph, repeated so Readability keeps it. ';
 const article = `<html><head><title>Fluff Article</title><meta name="description" content="About fluff">
@@ -23,7 +23,11 @@ test('bookmark manager end to end', async t => {
   t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); db.close(); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
-  const post = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });
+  const post = async (p, body, headers = {}) => {
+    const r = await fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });
+    if (p === '/save') await settled();
+    return r;
+  };
   const get = async p => (await fetch(base + p)).text();
 
   await t.test('save scrapes metadata + article text', async () => {

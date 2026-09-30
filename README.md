@@ -20,7 +20,7 @@ Binds to `127.0.0.1:4040` and rejects requests whose `Host` isn't localhost (DNS
 
 Open http://localhost:4040/bookmarklet. Drag the link to your bookmarks bar, or copy the code from the box into a new bookmark's URL field. If the standard button misbehaves (popups or form posts blocked), use the simple variant. You can also paste any URL into the box on the home page.
 
-Saving a URL already in the archive just opens it for editing. Pages that block the server's fetch, or aren't HTML, are still saved (URL as title, no text).
+Saving is instant: the server stores the URL right away and fetches the page in the background. In the tab that opens, add tags and press Save and the tab closes itself. Saving a URL already in the archive just opens it for editing. Pages that block the server's fetch, or aren't HTML, are still saved (URL as title, no text).
 
 ## Using it
 
