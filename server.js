@@ -38,6 +38,9 @@ CREATE TRIGGER IF NOT EXISTS bm_au AFTER UPDATE OF title, note, text ON bookmark
   INSERT INTO fts(rowid, title, note, text) VALUES (new.id, new.title, new.note, new.text); END;
 `);
 
+if (!db.prepare("SELECT 1 FROM pragma_table_info('bookmarks') WHERE name = 'archived_at'").get())
+  db.exec('ALTER TABLE bookmarks ADD COLUMN archived_at INTEGER'); // NULL = page text never fetched (imports)
+
 const now = () => Math.floor(Date.now() / 1000);
 const isDead = s => s === 404 || s === 410;
 const parseTags = s => [...new Set(String(s || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean))];
@@ -80,8 +83,8 @@ async function scrape(url) {
 }
 
 // ---------- data ----------
-const insertBm = db.prepare(`INSERT OR IGNORE INTO bookmarks(url,title,description,image,favicon,note,text,saved_at,status,checked_at)
-  VALUES(@url,@title,@description,@image,@favicon,@note,@text,@saved_at,@status,@checked_at)`);
+const insertBm = db.prepare(`INSERT OR IGNORE INTO bookmarks(url,title,description,image,favicon,note,text,saved_at,status,checked_at,archived_at)
+  VALUES(@url,@title,@description,@image,@favicon,@note,@text,@saved_at,@status,@checked_at,@archived_at)`);
 const setTags = db.transaction((id, tags) => {
   db.prepare('DELETE FROM bookmark_tags WHERE bookmark_id=?').run(id);
   for (const t of tags) db.prepare('INSERT INTO bookmark_tags VALUES(?,?)').run(id, t);
@@ -105,6 +108,33 @@ async function checkLinks() {
   return dead;
 }
 
+// Fetch page text for bookmarks that never had it (imports). Every attempt is stamped, so a page that
+// yields nothing (404, PDF, no article) is not retried forever. Keeps the user's title and note.
+async function archiveMissing() {
+  const upd = db.prepare(`UPDATE bookmarks SET text = ?, description = coalesce(nullif(?, ''), description),
+    image = coalesce(nullif(?, ''), image), favicon = coalesce(nullif(?, ''), favicon),
+    status = coalesce(?, status), checked_at = coalesce(?, checked_at), archived_at = ? WHERE id = ?`);
+  let n = 0;
+  for (const { id, url } of db.prepare("SELECT id, url FROM bookmarks WHERE archived_at IS NULL AND text = ''").all()) {
+    const m = await scrape(url);
+    upd.run(m.text, m.description, m.image, m.favicon, m.status, m.status && now(), now(), id);
+    if (m.text) n++;
+  }
+  return n;
+}
+const pending = () => db.prepare("SELECT count(*) n FROM bookmarks WHERE archived_at IS NULL AND text = ''").get().n;
+
+// One background job at a time (archive or link check); the footer shows which.
+let busy = null;
+const background = (name, fn) => {
+  if (busy) return false;
+  busy = name;
+  fn().catch(console.error).finally(() => { busy = null; });
+  return true;
+};
+const jobsHtml = () => busy ? h`· ${busy} running…`
+  : h`${pending() > 0 && h`· <form method=post action="/archive" class=inline><button>Archive ${pending()} pages</button></form>`}`;
+
 // Netscape export: <DT><A HREF ADD_DATE TAGS>title</A> [<DD>note]. Only http(s) links survive.
 function parseNetscape(html) {
   const doc = new JSDOM(html, silent()).window.document;
@@ -119,7 +149,7 @@ function parseNetscape(html) {
 const importAll = db.transaction(items => {
   let added = 0;
   for (const it of items) {
-    const r = insertBm.run({ description: '', image: '', favicon: '', text: '', status: null, checked_at: null, ...it });
+    const r = insertBm.run({ description: '', image: '', favicon: '', text: '', status: null, checked_at: null, archived_at: null, ...it });
     if (r.changes) { setTags(r.lastInsertRowid, it.tags); added++; }
   }
   return added;
@@ -152,7 +182,8 @@ aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.1rem 0}
 label{display:block;margin:.8rem 0 .2rem}
 form.edit input[type=text],textarea{width:100%;box-sizing:border-box}
 footer{margin-top:2rem;color:var(--mut);font-size:13px}footer a{color:inherit}
-.add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}`;
+.add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
+form.inline{display:inline}form.inline button{padding:.1rem .4rem;font-size:13px}`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style>
@@ -160,7 +191,7 @@ ${h`<header><a href="/"><b>marks</b></a>
 <form action="/"><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
 ${body}
 <footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
-<a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a></footer>`.s}`;
+<a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a> ${jobsHtml()}</footer>`.s}`;
 
 // ---------- app ----------
 const app = express();
@@ -218,7 +249,7 @@ app.post('/save', async (req, res) => {
   if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
   if (!db.prepare('SELECT 1 FROM bookmarks WHERE url=?').get(url)) {
     const m = await scrape(url);
-    insertBm.run({ ...m, url, title: m.title || domain(url), note: '', saved_at: now(), checked_at: m.status && now() });
+    insertBm.run({ ...m, url, title: m.title || domain(url), note: '', saved_at: now(), checked_at: m.status && now(), archived_at: now() });
   }
   res.redirect(303, `/b/${db.prepare('SELECT id FROM bookmarks WHERE url=?').get(url).id}`);
 });
@@ -277,6 +308,8 @@ app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) =>
   res.type('text').send(`Imported ${added} new of ${items.length} http(s) links.`);
 });
 
+app.post('/archive', (req, res) => { background('archive', archiveMissing); res.redirect(303, '/'); });
+
 const csvCell = v => {
   v = String(v ?? '');
   if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; // spreadsheet formula injection: titles come from arbitrary websites
@@ -293,7 +326,7 @@ app.get('/export', (req, res) => {
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
 
-module.exports = { app, db, checkLinks, parseNetscape };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`marks: http://localhost:${PORT}  db: ${db.name}`));
