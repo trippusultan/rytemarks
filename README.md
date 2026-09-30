@@ -18,11 +18,9 @@ Binds to `127.0.0.1:4040` and rejects requests whose `Host` isn't localhost (DNS
 
 ## Install the bookmarklet
 
-1. Start the server and open http://localhost:4040.
-2. Drag **+ Save to marks** (footer) onto your bookmarks bar. Or create a bookmark by hand and paste the contents of `BOOKMARKLET` from `server.js` as its URL.
-3. On any page, click it. A new tab opens on the edit screen after the server has fetched the page: add comma-separated tags (autocompletes from existing tags) and an optional note, then Save. Just closing the tab keeps the bookmark, untagged.
+Open http://localhost:4040/bookmarklet. Drag the link to your bookmarks bar, or copy the code from the box into a new bookmark's URL field. If the standard button misbehaves (popups or form posts blocked), use the simple variant. You can also paste any URL into the box on the home page.
 
-Saving a URL already in the archive just opens it for editing. Pages that block the server's fetch, or aren't HTML, are still saved (URL as title, no text). Sites with a strict `form-action` CSP can block the bookmarklet.
+Saving a URL already in the archive just opens it for editing. Pages that block the server's fetch, or aren't HTML, are still saved (URL as title, no text).
 
 ## Using it
 

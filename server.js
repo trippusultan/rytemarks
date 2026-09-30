@@ -42,6 +42,11 @@ const now = () => Math.floor(Date.now() / 1000);
 const isDead = s => s === 404 || s === 410;
 const parseTags = s => [...new Set(String(s || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean))];
 const httpUrl = s => { try { const u = new URL(s); return /^https?:$/.test(u.protocol) ? u.href : null; } catch { return null; } };
+// Accepts "example.com/x" as well as full URLs; only http(s) survives.
+const cleanUrl = s => {
+  s = String(s || '').trim();
+  return httpUrl(/^[a-z][a-z0-9+.-]*:\/\//i.test(s) ? s : 'https://' + s);
+};
 const domain = url => new URL(url).hostname.replace(/^www\./, '');
 // Quote every token so user input can never be an FTS5 syntax error; trailing * = prefix match.
 const ftsQuery = q => (String(q).match(/[\p{L}\p{N}_]+/gu) || []).map(t => `"${t}"*`).join(' ');
@@ -125,6 +130,7 @@ const qs = o => { const s = new URLSearchParams(Object.entries(o).filter(([, v])
 const date = t => new Date(t * 1000).toISOString().slice(0, 10);
 
 const BOOKMARKLET = `javascript:(function(){var f=document.createElement('form');f.method='POST';f.action='http://localhost:${PORT}/save';f.target='_blank';var i=document.createElement('input');i.type='hidden';i.name='url';i.value=location.href;f.appendChild(i);document.body.appendChild(f);f.submit();f.remove()})()`;
+const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const CSS = `:root{color-scheme:light dark;--mut:#777}
 body{font:15px/1.5 system-ui,sans-serif;max-width:960px;margin:0 auto;padding:1rem}
 header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
@@ -140,14 +146,15 @@ li.b{display:flex;gap:.7rem;padding:.6rem 0;border-bottom:1px solid #8884}
 aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.1rem 0}
 label{display:block;margin:.8rem 0 .2rem}
 form.edit input[type=text],textarea{width:100%;box-sizing:border-box}
-footer{margin-top:2rem;color:var(--mut);font-size:13px}footer a{color:inherit}`;
+footer{margin-top:2rem;color:var(--mut);font-size:13px}footer a{color:inherit}
+.add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style>
 ${h`<header><a href="/"><b>marks</b></a>
 <form action="/"><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
 ${body}
-<footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar) ·
+<footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
 <a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a></footer>`.s}`;
 
 // ---------- app ----------
@@ -178,14 +185,31 @@ app.get('/', (req, res) => {
     <div class=meta>${domain(b.url)} · ${b.tags.map(t => h`<a href="/${qs({ tag: t })}">#${t}</a> `)}· ${date(b.saved_at)} · <a href="/b/${b.id}">edit</a></div>
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
-    <main>${tag && h`<p class=meta>Tag <b>#${tag}</b> · <a href="/${qs({ q })}">clear</a></p>`}
+    <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
+    ${tag && h`<p class=meta>Tag <b>#${tag}</b> · <a href="/${qs({ q })}">clear</a></p>`}
     <ul>${rows.map(item)}</ul>${!rows.length && h`<p class=meta>Nothing here.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, page: pg + 1 })}">older →</a>`}</main>
     <aside><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
+app.get('/save', (req, res) => {
+  const url = cleanUrl(req.query.url);
+  if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
+  res.send(page('Save', h`<h2>Save this page?</h2><p class=meta>${url}</p>
+    <form method=post action="/save"><input type=hidden name=url value="${url}"><button>Save</button> <a href="/">Cancel</a></form>`));
+});
+
+app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`<h2>Save button</h2>
+  <p>Drag a link to your bookmarks bar (Ctrl+Shift+B shows it), or create a bookmark by hand and paste the code below as its URL. The server must be running when you click.</p>
+  <h3>Standard (opens a new tab)</h3>
+  <p><a href="${raw(esc(BOOKMARKLET))}">Save to marks</a></p>
+  <textarea readonly rows=6 style="width:100%" onclick="this.select()">${BOOKMARKLET}</textarea>
+  <h3>Fallback (same tab; use it when the standard one is blocked)</h3>
+  <p><a href="${raw(esc(BOOKMARKLET_GET))}">Save to marks (simple)</a></p>
+  <textarea readonly rows=3 style="width:100%" onclick="this.select()">${BOOKMARKLET_GET}</textarea>`)));
+
 app.post('/save', async (req, res) => {
-  const url = httpUrl(req.body.url);
+  const url = cleanUrl(req.body.url);
   if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
   if (!db.prepare('SELECT 1 FROM bookmarks WHERE url=?').get(url)) {
     const m = await scrape(url);
