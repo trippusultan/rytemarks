@@ -245,11 +245,12 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
-  const q = String(req.query.q || '').trim(), tag = String(req.query.tag || '').trim().toLowerCase();
+  const q = String(req.query.q || '').trim();
+  const tags = parseTags(req.query.tag), tag = tags.join(',');
   const pg = Math.max(1, parseInt(req.query.page) || 1), fq = ftsQuery(q), dead = req.query.dead === '1';
   const where = [], args = [];
   if (fq) { where.push('b.id IN (SELECT rowid FROM fts WHERE fts MATCH ?)'); args.push(fq); }
-  if (tag) { where.push('EXISTS (SELECT 1 FROM bookmark_tags t WHERE t.bookmark_id = b.id AND t.tag = ?)'); args.push(tag); }
+  for (const t of tags) { where.push('EXISTS (SELECT 1 FROM bookmark_tags t WHERE t.bookmark_id = b.id AND t.tag = ?)'); args.push(t); }
   if (dead) where.push('b.status IN (404, 410)');
   const rows = db.prepare(`${SELECT} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY b.saved_at DESC, b.id DESC LIMIT ? OFFSET ?`)
     .all(...args, PAGE + 1, (pg - 1) * PAGE).map(withTags);
@@ -263,6 +264,7 @@ app.get('/', (req, res) => {
       WHERE fts MATCH ? AND rowid IN (${rows.map(() => '?').join(',')})`).all(fq, ...rows.map(r => r.id)).map(r => [r.rowid, r.s]));
     for (const b of rows) b.snippet = snip.get(b.id);
   }
+  const toggle = t => (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]).join(',');
   const item = b => h`<li class=b>
     <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="this.style.visibility='hidden'">
     <div><a href="${b.url}">${b.title || b.url}</a> ${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}
@@ -272,12 +274,12 @@ app.get('/', (req, res) => {
   res.send(page('marks', h`<div class=layout>
     <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
     ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
-    ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged #${tag}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
+    ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</main>
-    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
+    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag) })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
 app.get('/save', (req, res) => {
