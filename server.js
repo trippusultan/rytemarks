@@ -183,6 +183,7 @@ label{display:block;margin:.8rem 0 .2rem}
 form.edit input[type=text],textarea{width:100%;box-sizing:border-box}
 footer{margin-top:2rem;color:var(--mut);font-size:13px}footer a{color:inherit}
 .add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
+mark{background:#fd0;color:#000}
 form.inline{display:inline}form.inline button{padding:.1rem .4rem;font-size:13px}`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
@@ -216,10 +217,16 @@ app.get('/', (req, res) => {
   const rows = db.prepare(`${SELECT} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY b.saved_at DESC, b.id DESC LIMIT ? OFFSET ?`)
     .all(...args, PAGE + 1, (pg - 1) * PAGE).map(withTags);
   const more = rows.length > PAGE && rows.pop();
+  if (fq && rows.length) { // \x01/\x02 mark hits; page text is escaped before they become <mark>
+    const snip = new Map(db.prepare(`SELECT rowid, snippet(fts, -1, char(1), char(2), '…', 20) s FROM fts
+      WHERE fts MATCH ? AND rowid IN (${rows.map(() => '?').join(',')})`).all(fq, ...rows.map(r => r.id)).map(r => [r.rowid, r.s]));
+    for (const b of rows) b.snippet = snip.get(b.id);
+  }
   const item = b => h`<li class=b>
     <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="this.style.visibility='hidden'">
     <div><a href="${b.url}">${b.title || b.url}</a> ${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}
     <div class=meta>${domain(b.url)} · ${b.tags.map(t => h`<a href="/${qs({ tag: t })}">#${t}</a> `)}· ${date(b.saved_at)} · <a href="/b/${b.id}">edit</a></div>
+    ${b.snippet && h`<div class=meta>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</div>`}
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
     <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
