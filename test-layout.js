@@ -52,6 +52,22 @@ test('layout: three-zone header, centred column, centred footer, roomier phone n
     assert.match(css, /\.fr2\{[^}]*justify-content:center[^}]*gap:\.6rem 1\.4rem/);
   });
 
+  await t.test('footer rows sit on one straight line: credit centred by flexbox (not baselines), equal-height links, 2x2 grid on phones', () => {
+    // an inline-flex link with an icon takes its baseline from the icon's bottom edge, which lifted the handle ~4px above "Made by"
+    assert.match(css, /\.fl2>span\{display:inline-flex;align-items:center;gap:\.3rem\}/);
+    assert.match(css, /\.fr2 a\{[^}]*align-items:center[^}]*min-height:32px[^}]*white-space:nowrap/); // a wrapped chip made its row taller and knocked its neighbour off the line at 320px
+    assert.ok(css.lastIndexOf('@media(max-width:360px){.fr2{grid-template-columns:auto}}') > css.lastIndexOf('@media(max-width:640px){.fr2{display:grid'), 'very narrow phones: one column, after the 2x2 rule');
+    const base = css.indexOf('.fr2{display:flex');
+    const grid = css.lastIndexOf('@media(max-width:640px){.fr2{display:grid;grid-template-columns:repeat(2,auto);justify-content:center;justify-items:center;');
+    assert.ok(grid > base && base > 0, 'phone grid comes after the base .fr2 rule');
+  });
+
+  await t.test('search/add bars can shrink to a 320px phone (grid tracks and inputs may go below their intrinsic width)', () => {
+    assert.match(css, /\.bar2\{[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
+    assert.match(css, /\.bar2 \.field input,\.bar2 \.add input\{[^}]*min-width:0/);
+    assert.match(phone, /\.bar2\{grid-template-columns:minmax\(0,1fr\)\}/);
+  });
+
   await t.test('phone: the header is just the centred logo (no actions), links live in the tab bar', () => {
     assert.ok(phoneAt > css.indexOf('.tabbar{display:none}') && phoneAt > css.indexOf('header{position:sticky') && phoneAt > css.indexOf('.brand{'), 'phone block comes after the base rules');
     assert.match(phone, /header\{[^}]*grid-template-columns:1fr[;}][^}]*justify-items:center[^}]*padding:\.6rem 1rem/);
