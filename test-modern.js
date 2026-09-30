@@ -93,7 +93,7 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
     assert.match(html, /<h3>Tags <span class=n>1<\/span><\/h3>/);
     assert.match(html, /<div class=cloud><a href="\/\?tag=reading" class="tc">#reading <span class=n>1<\/span><\/a><\/div>/);
     assert.match(html, /<a class=more href="\/tags">Manage tags<\/a>/);
-    assert.match(bare(html), /<section class=side><h3>Status<\/h3><a class="stat" href="\/\?dead=1"><span>Dead links<\/span><span class="badge">0<\/span><\/a><div class=jobs><form method=post action="\/check" class=inline><button>Check links now<\/button><\/form><form method=post action="\/archive" class=inline><button>Archive \d+ pages<\/button><\/form><\/div><\/section>/);
+    assert.match(bare(html), /<section class=side><h3>Status<\/h3><a class="stat" href="\/\?dead=1"><span>Dead links<\/span><span class="badge">0<\/span><\/a><p class=meta>No backup yet<\/p><div class=jobs><form method=post action="\/check" class=inline><button>Check links now<\/button><\/form><form method=post action="\/archive" class=inline><button>Archive \d+ pages<\/button><\/form><\/div><\/section>/);
   });
 
   await t.test('CSS: sidebar panels, chips with active state, badge', () => {

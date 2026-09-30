@@ -4,6 +4,7 @@ const path = require('node:path');
 
 // Must be set before server.js loads. Every test file runs in its own process, so each gets its own DB.
 process.env.MARKS_DB = path.join(os.tmpdir(), `marks-test-${process.pid}-${Date.now()}.db`);
+process.env.MARKS_BACKUPS = require('node:fs').mkdtempSync(path.join(os.tmpdir(), 'marks-bk-'));
 const server = require('./server');
 
 const para = 'Zanzibarfluff is the unique word in this readable article paragraph, repeated so Readability keeps it. ';
@@ -21,7 +22,7 @@ async function setup(t, routes = {}) {
     res.writeHead(404).end();
   }).listen(0, '127.0.0.1');
   const srv = server.app.listen(0, '127.0.0.1');
-  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); });
+  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); require('node:fs').rmSync(process.env.MARKS_BACKUPS, { recursive: true, force: true }); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
   const postRaw = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });

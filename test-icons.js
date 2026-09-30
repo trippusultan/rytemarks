@@ -103,7 +103,7 @@ test('icons, navbar, tab bar, footer', async t => {
   });
 
   await t.test('Status panel now holds Check links and Archive (with icons)', () => {
-    has(home, `<section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge bad">1</span></a><div class=jobs><form method=post action="/check" class=inline><button>${svg('arrow-clockwise')}Check links now</button></form>`);
+    has(home, `<section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge bad">1</span></a><p class=meta>No backup yet</p><div class=jobs><form method=post action="/check" class=inline><button>${svg('arrow-clockwise')}Check links now</button></form>`);
     has(home, `<form method=post action="/archive" class=inline><button>${svg('archive')}Archive 2 pages</button></form>`);
   });
 

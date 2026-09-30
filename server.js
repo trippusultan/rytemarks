@@ -12,6 +12,8 @@ const metascraper = require('metascraper')([
 
 const PORT = +process.env.PORT || 4040; // PORT=4141 lets a preview run beside your real instance
 const PAGE = 100;
+const { backupOnce, latestBackup } = require('./backups');
+const BACKUP_DIR = process.env.MARKS_BACKUPS || path.join(__dirname, 'backups');
 const UA = 'Mozilla/5.0 (compatible; rytemarks personal bookmark archiver)';
 
 // One file, default rollback journal (no -wal sidecar), so copying it while idle is a valid backup.
@@ -554,7 +556,7 @@ app.get('/', (req, res) => {
     ${empty && h`<div class=empty><span class=ei>${ic('bookmarks-simple')}</span><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>
-    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a><div class=jobs>${jobsHtml()}</div></section></aside></div>`, { q, tag, cur: 'home' }));
+    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a><p class=meta>${(d => d ? 'Last backup: ' + d : 'No backup yet')(latestBackup(BACKUP_DIR))}</p><div class=jobs>${jobsHtml()}</div></section></aside></div>`, { q, tag, cur: 'home' }));
 });
 
 const badUrl = (res, given) => messagePage(res, 400, "Couldn't save that", given
@@ -771,4 +773,9 @@ module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`rytemarks: http://localhost:${PORT}  db: ${db.name}`));
   cron.schedule('0 3 * * 0', () => checkLinks().catch(console.error)); // Sundays 03:00, only while the server runs
+  const autoBackup = () => backupOnce(db, BACKUP_DIR)
+    .then(r => { if (!r.skipped) console.log('backup written:', r.dest); })
+    .catch(e => console.error('backup failed:', e.message)); // never crashes the server; the Status line shows the gap
+  autoBackup(); // catches up after a day the server was off
+  cron.schedule('15 2 * * *', autoBackup); // then every day at 02:15 while it runs
 }

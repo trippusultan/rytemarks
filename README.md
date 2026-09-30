@@ -34,6 +34,8 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 
 `npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run rytemarks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
 
+The server also writes a dated backup to `backups/` at start-up (if today's is missing) and every day at 02:15 while it runs, keeping the newest 14 (other files in that folder are never touched). The home page Status panel shows the date of the last one. To restore, stop the server and copy a `marks-YYYY-MM-DD.db` over `marks.db`.
+
 ## Brand
 
 The logo is a tally mark (four strokes and a ribbon) drawn as inline SVG, next to a "rytemarks" wordmark set in the terminal font; the favicon is the same mark. On the dark theme the strokes take the text colour, so nothing else is needed. `docs/brand/brand-board.html` holds the palette and tagline, and `test-brand.js` keeps the mark and palette in sync with the app. A PNG logo and wordmark were tried and dropped; the supplied files are kept in `docs/brand/logo/` and in git history (commit fcf255e). The database file is still `marks.db`.
