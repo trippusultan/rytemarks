@@ -133,7 +133,7 @@ const background = (name, fn) => {
   return true;
 };
 const jobsHtml = () => busy ? h`· ${busy} running…`
-  : h`${pending() > 0 && h`· <form method=post action="/archive" class=inline><button>Archive ${pending()} pages</button></form>`}`;
+  : h`· <form method=post action="/check" class=inline><button>Check links now</button></form>${pending() > 0 && h` <form method=post action="/archive" class=inline><button>Archive ${pending()} pages</button></form>`}`;
 
 // Netscape export: <DT><A HREF ADD_DATE TAGS>title</A> [<DD>note]. Only http(s) links survive.
 function parseNetscape(html) {
@@ -208,10 +208,11 @@ app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim(), tag = String(req.query.tag || '').trim().toLowerCase();
-  const pg = Math.max(1, parseInt(req.query.page) || 1), fq = ftsQuery(q);
+  const pg = Math.max(1, parseInt(req.query.page) || 1), fq = ftsQuery(q), dead = req.query.dead === '1';
   const where = [], args = [];
   if (fq) { where.push('b.id IN (SELECT rowid FROM fts WHERE fts MATCH ?)'); args.push(fq); }
   if (tag) { where.push('EXISTS (SELECT 1 FROM bookmark_tags t WHERE t.bookmark_id = b.id AND t.tag = ?)'); args.push(tag); }
+  if (dead) where.push('b.status IN (404, 410)');
   const rows = db.prepare(`${SELECT} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY b.saved_at DESC, b.id DESC LIMIT ? OFFSET ?`)
     .all(...args, PAGE + 1, (pg - 1) * PAGE).map(withTags);
   const more = rows.length > PAGE && rows.pop();
@@ -223,9 +224,10 @@ app.get('/', (req, res) => {
   res.send(page('marks', h`<div class=layout>
     <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
     ${tag && h`<p class=meta>Tag <b>#${tag}</b> · <a href="/${qs({ q })}">clear</a></p>`}
+    ${dead && h`<p class=meta>Dead links only · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>${!rows.length && h`<p class=meta>Nothing here.</p>`}
-    ${pg > 1 && h`<a href="/${qs({ q, tag, page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, page: pg + 1 })}">older →</a>`}</main>
-    <aside><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
+    ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</main>
+    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
 app.get('/save', (req, res) => {
@@ -309,6 +311,7 @@ app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) =>
 });
 
 app.post('/archive', (req, res) => { background('archive', archiveMissing); res.redirect(303, '/'); });
+app.post('/check', (req, res) => { background('link check', checkLinks); res.redirect(303, '/'); });
 
 const csvCell = v => {
   v = String(v ?? '');
