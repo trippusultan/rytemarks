@@ -30,6 +30,10 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 - **Undo**: deleting a bookmark shows an Undo button on the next page (one level, 5 minutes, held in memory).
 - **Export**: `/export?format=json` (everything, including page text) or `/export?format=csv` (no page text, since cells that large break spreadsheets; risky leading `= + - @` are prefixed with `'`).
 
+## Importing, folders and restoring
+
+Import takes a browser bookmarks export (`.html`) or rytemarks' own JSON export. Folder names in a browser export become tags ("Bookmarks bar", "Other bookmarks" and similar root folders are ignored). To restore from a backup export: stop the server, move `marks.db` aside, start it (it creates an empty one), open Import and choose a file from Export JSON. Bookmarks, tags, notes and archived page text come back; links you already have are skipped.
+
 ## Cleaning up duplicates
 
 URLs are normalised when you save or import: tracking parameters (`utm_*`, `fbclid`, `gclid` and friends), empty `#fragments` and trailing slashes are dropped, so the same page saved twice is one bookmark (single-page-app `#/route` fragments are kept). For bookmarks saved before that, `npm run dedupe` shows what would merge (a dry run); `npm run dedupe -- --apply` first writes `backups/marks-before-dedupe-<time>.db`, then merges each group into its oldest bookmark (notes joined, tags combined, longest page text kept).

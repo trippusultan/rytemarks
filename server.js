@@ -183,7 +183,20 @@ const background = (name, fn) => {
 const jobsHtml = () => busy ? h`<span>${busy} running…</span>`
   : h`<form method=post action="/check" class=inline><button>${ic('arrow-clockwise')}Check links now</button></form>${pending() > 0 && h`<form method=post action="/archive" class=inline><button>${ic('archive')}Archive ${pending()} pages</button></form>`}`;
 
-// Netscape export: <DT><A HREF ADD_DATE TAGS>title</A> [<DD>note]. Only http(s) links survive.
+// Browser root folders are containers, not categories: never turn them into tags.
+const ROOT_FOLDERS = new Set(['bookmarks', 'bookmarks bar', 'bookmarks toolbar', 'bookmarks menu', 'other bookmarks', 'mobile bookmarks', 'favorites', 'favourites']);
+// In an export a folder is <DT><H3>Name</H3><DL>…links…</DL>; the parser nests each <DL> inside the <DT> of its folder.
+const folderTags = a => {
+  const names = [];
+  for (let dl = a.closest('dl'); dl; dl = dl.parentElement?.closest('dl')) {
+    const dt = dl.closest('dt');
+    const h3 = (dt && [...dt.children].find(c => c.tagName === 'H3')) || (dl.previousElementSibling?.tagName === 'H3' ? dl.previousElementSibling : null);
+    if (h3) names.unshift(h3.textContent.trim().toLowerCase().replace(/,/g, ' ').replace(/\s+/g, ' '));
+  }
+  return names.filter(n => n && !ROOT_FOLDERS.has(n));
+};
+
+// Netscape export: <DT><A HREF ADD_DATE TAGS>title</A> [<DD>note]. Only http(s) links survive; folders become tags.
 function parseNetscape(html) {
   const doc = new JSDOM(html, silent()).window.document;
   return [...doc.querySelectorAll('a[href]')].flatMap(a => {
@@ -191,9 +204,27 @@ function parseNetscape(html) {
     if (!url) return [];
     const dd = a.closest('dt')?.nextElementSibling;
     const d = +a.getAttribute('add_date') || now();
-    return [{ url, title: a.textContent.trim(), tags: parseTags(a.getAttribute('tags')), saved_at: Math.floor(d > 1e11 ? d / 1000 : d), note: dd?.tagName === 'DD' ? dd.textContent.trim() : '' }];
+    return [{ url, title: a.textContent.trim(), tags: parseTags((a.getAttribute('tags') || '') + ',' + folderTags(a).join(',')), saved_at: Math.floor(d > 1e11 ? d / 1000 : d), note: dd?.tagName === 'DD' ? dd.textContent.trim() : '' }];
   });
 }
+
+// rytemarks' own JSON export (/export): this is the restore path. Anything malformed is skipped, never thrown.
+function parseJsonExport(text) {
+  let data;
+  try { data = JSON.parse(text); } catch { return []; }
+  if (!Array.isArray(data)) return [];
+  const str = v => typeof v === 'string' ? v : '';
+  return data.flatMap(b => {
+    const url = b && typeof b.url === 'string' ? httpUrl(b.url) : null;
+    if (!url) return [];
+    const t = Date.parse(b.saved_at), body = str(b.text), ok = Number.isInteger(b.status);
+    return [{ url, title: str(b.title), description: str(b.description), image: str(b.image), favicon: str(b.favicon), note: str(b.note),
+      tags: parseTags(Array.isArray(b.tags) ? b.tags.filter(x => typeof x === 'string').join(',') : str(b.tags)),
+      saved_at: Number.isNaN(t) ? now() : Math.floor(t / 1000), text: body,
+      status: ok ? b.status : null, checked_at: ok ? now() : null, archived_at: body ? now() : null }];
+  });
+}
+const parseImport = text => /^\s*[[{]/.test(text) ? parseJsonExport(text) : parseNetscape(text);
 const importAll = db.transaction(items => {
   let added = 0;
   for (const it of items) {
@@ -663,9 +694,9 @@ app.post('/undo', (req, res) => {
   res.redirect(303, '/?ok=restored');
 });
 
-app.get('/import', (req, res) => res.send(page('Import', h`${pageHead('Import bookmarks', 'Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop. Links you already have are skipped, and nothing is written until you confirm.')}
+app.get('/import', (req, res) => res.send(page('Import', h`${pageHead('Import bookmarks', 'Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop, or a JSON export from rytemarks itself (your backup). Links you already have are skipped, and nothing is written until you confirm.')}
 <div class=import>
-<label class=drop id=drop for=f><input type=file id=f accept=".html,.htm"><span class=drop-i>${ic('upload-simple')}</span><span class=drop-t>Drop your bookmarks file here</span><span class=drop-s>or choose a file (.html)</span></label>
+<label class=drop id=drop for=f><input type=file id=f accept=".html,.htm,.json"><span class=drop-i>${ic('upload-simple')}</span><span class=drop-t>Drop your bookmarks file here</span><span class=drop-s>or choose a file (.html or .json)</span></label>
 <p id=err class=err role=alert hidden>${ic('warning-circle')}<span id=err-t></span></p>
 <div id=preview class=panel hidden aria-live=polite><h2>Ready to import</h2><p class=meta>File: <b id=p-file></b></p><div class=stats3><div class=tile><b class=big id=p-new>0</b><span>new</span></div><div class=tile><b class=big id=p-dupe>0</b><span>already saved</span></div><div class=tile><b class=big id=p-tags>0</b><span>tags found</span></div></div><p id=p-none class=meta hidden>Everything in this file is already in your library.</p><div class=row><button id=go type=button>${ic('download-simple')}<span id=go-t>Import</span></button><button id=again type=button class=ghost>Choose another file</button></div></div>
 <div id=result class=panel hidden role=status><h2>Imported</h2><div class=stats3><div class=tile><b class=big id=r-added>0</b><span>added</span></div><div class=tile><b class=big id=r-skipped>0</b><span>skipped, already saved</span></div></div><p class=meta>Page text isn't fetched during import. Archive the pages in the background to make imported bookmarks searchable by their content.</p><div class=row><a class=btn href="/">View bookmarks</a><form method=post action="/archive" class=inline><button>${ic('archive')}Archive pages now</button></form></div></div>
@@ -684,7 +715,7 @@ const take=async x=>{
     if(!d.total)return fail("That doesn't look like a bookmarks export: no web links were found.");
     $('p-file').textContent=x.name;$('p-new').textContent=d.fresh;$('p-dupe').textContent=d.dupes;$('p-tags').textContent=d.tags;
     go.disabled=d.fresh===0;$('go-t').textContent=d.fresh?'Import '+d.fresh+' bookmarks':'Nothing new to import';$('p-none').hidden=d.fresh!==0;prev.hidden=false;
-  }catch(e){fail('Could not read that file. Choose an HTML bookmarks export.')}
+  }catch(e){fail('Could not read that file. Choose an HTML or JSON bookmarks export.')}
   finally{drop.classList.remove('busy');drop.removeAttribute('aria-busy')}
 };
 f.addEventListener('change',()=>{if(f.files[0])take(f.files[0])});
@@ -715,7 +746,7 @@ const dryRun = items => {
 };
 
 app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) => {
-  const items = parseNetscape(typeof req.body === 'string' ? req.body : '');
+  const items = parseImport(typeof req.body === 'string' ? req.body : '');
   if (req.query.dry === '1') return res.json(dryRun(items));
   const added = importAll(items);
   res.type('text').send(`Imported ${added} new of ${items.length} http(s) links.`);
@@ -769,7 +800,7 @@ app.get('/export', (req, res) => {
 
 app.use((req, res) => messagePage(res, 404, 'Page not found', h`<p class=meta>Nothing lives at ${req.path}.</p>`));
 
-module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo, safeBack };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, parseImport, settled, ago, undo, safeBack };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`rytemarks: http://localhost:${PORT}  db: ${db.name}`));

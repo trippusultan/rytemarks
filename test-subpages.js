@@ -83,8 +83,8 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
   // ---------- import ----------
   await t.test('import: header block, dropzone with a real file input, export how-to', async () => {
     const html = await s.get('/import');
-    assert.match(html, /<h1>Import bookmarks<\/h1><p class=lede>Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop\./);
-    assert.match(bare(html), /<label class=drop id=drop for=f><input type=file id=f accept="\.html,\.htm"><span class=drop-i><\/span><span class=drop-t>Drop your bookmarks file here<\/span><span class=drop-s>or choose a file \(\.html\)<\/span><\/label>/);
+    assert.match(html, /<h1>Import bookmarks<\/h1><p class=lede>Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop, or a JSON export from rytemarks itself/);
+    assert.match(bare(html), /<label class=drop id=drop for=f><input type=file id=f accept="\.html,\.htm,\.json"><span class=drop-i><\/span><span class=drop-t>Drop your bookmarks file here<\/span><span class=drop-s>or choose a file \(\.html or \.json\)<\/span><\/label>/);
     assert.match(bare(html), /<details class=howto><summary>How do I export my bookmarks\?<\/summary><ul>/);
     assert.doesNotMatch(html, /page text is not fetched/);
   });

@@ -85,7 +85,7 @@ test('bookmark manager end to end', async t => {
     const json = JSON.parse(await get('/export?format=json'));
     assert.equal(json.length, 3);
     assert.ok(json.find(b => b.url.endsWith('/article')).text.includes('Zanzibarfluff'));
-    assert.deepEqual(json.find(b => b.url.includes('example.com')).tags, ['dev', 'tools']);
+    assert.deepEqual(json.find(b => b.url.includes('example.com')).tags, ['dev', 'folder', 'tools']); // "folder" is the fixture's <H3>Folder</H3>: folders become tags
     db.prepare("UPDATE bookmarks SET title='=HYPERLINK(1)' WHERE id=1").run();
     const csv = await get('/export?format=csv');
     assert.match(csv, /^url,title,description/);

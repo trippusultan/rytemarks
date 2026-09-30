@@ -118,7 +118,7 @@ test('icons, navbar, tab bar, footer', async t => {
     has(home, `<span class=dead title="HTTP 404 at last check">${svg('link-break')}<span class=sr>404</span></span>`);
     has(await s.get('/?ok=saved'), `<div class="toast" role=status><span class=tick>${svg('check-circle')}</span>Saved.</div>`);
     const imp = await s.get('/import');
-    has(imp, `<input type=file id=f accept=".html,.htm"><span class=drop-i>${svg('upload-simple')}</span><span class=drop-t>`);
+    has(imp, `<input type=file id=f accept=".html,.htm,.json"><span class=drop-i>${svg('upload-simple')}</span><span class=drop-t>`);
     has(imp, `<p id=err class=err role=alert hidden>${svg('warning-circle')}<span id=err-t></span></p>`);
     has(imp, `<button id=go type=button>${svg('download-simple')}<span id=go-t>Import</span></button>`);
     has(imp, `<summary>${svg('caret-right')}How do I export my bookmarks?</summary>`);
