@@ -7,7 +7,7 @@ test('saving without the bookmarklet', async t => {
 
   await t.test('GET /save asks first and never saves', async () => {
     const html = await s.get(`/save?url=${encodeURIComponent(s.fake + '/article')}`);
-    assert.match(html, /<form method=post action="\/save">/);
+    assert.match(html, /<form id=f method=post action="\/save">/);
     assert.equal(s.db.prepare('SELECT count(*) n FROM bookmarks').get().n, 0);
     assert.equal((await fetch(s.base + '/save?url=javascript:alert(1)')).status, 400);
   });

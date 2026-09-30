@@ -225,7 +225,9 @@ const safeBack = s => {
   } catch { return '/'; }
 };
 
-const BOOKMARKLET = `javascript:(function(){var f=document.createElement('form');f.method='POST';f.action='http://localhost:${PORT}/save';f.target='_blank';var i=document.createElement('input');i.type='hidden';i.name='url';i.value=location.href;f.appendChild(i);document.body.appendChild(f);f.submit();f.remove()})()`;
+// The address travels in the link (a GET that opens a tab), not in a form body: some browsers open a form's
+// target=_blank as a bare GET and drop the POST body. /save then auto-submits the real POST itself.
+const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
 const CSS = `:root{color-scheme:light dark;--bg:#fff;--fg:#1c1c1e;--mut:#6b6b73;--line:#e4e4e8;--acc:#2f6fed;--chip:#eef1f7;--hover:#f6f7fb;--bad:#c2410c;--ok:#15803d}
@@ -321,15 +323,21 @@ app.get('/', (req, res) => {
     <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="${tags.includes(t.tag) ? 'on' : ''}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
+const badUrl = (res, given) => res.status(400).send(page('Bad URL', h`<h2>Couldn't save that</h2>
+  ${given ? h`<p>“${String(given).slice(0, 200)}” is not an http(s) web address.</p>`
+    : h`<p>No web address arrived. If you clicked the save bookmark, your browser dropped it: <a href="/bookmarklet">install the newer bookmark</a>, or paste the address on the <a href="/">home page</a>.</p>`}`));
+
 app.get('/save', (req, res) => {
   const url = cleanUrl(req.query.url);
-  if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
-  res.send(page('Save', h`<h2>Save this page?</h2><p class=meta>${url}</p>
-    <form method=post action="/save"><input type=hidden name=url value="${url}"><button>Save</button> <a href="/">Cancel</a></form>`));
+  if (!url) return badUrl(res, req.query.url);
+  res.send(page('Save', h`<h2>Saving…</h2><p class=meta>${url}</p>
+    <form id=f method=post action="/save"><input type=hidden name=url value="${url}"><button>Save</button> <a href="/">Cancel</a></form>
+    <script>document.getElementById('f').submit()</script>`));
 });
 
 app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`<h2>Save button</h2>
   <p>Drag a link to your bookmarks bar (Ctrl+Shift+B shows it), or create a bookmark by hand and paste the code below as its URL. The server must be running when you click.</p>
+  <p>Already have an older save bookmark that says "No web address arrived"? Delete it and install this one.</p>
   <h3>Standard (opens a new tab)</h3>
   <p><a href="${raw(esc(BOOKMARKLET))}">Save to marks</a></p>
   <textarea readonly rows=6 style="width:100%" onclick="this.select()">${BOOKMARKLET}</textarea>
@@ -339,7 +347,7 @@ app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`<h2>Save bu
 
 app.post('/save', (req, res) => {
   const url = cleanUrl(req.body?.url);
-  if (!url) return res.status(400).send(page('Bad URL', h`<p>Only http(s) URLs can be saved.</p>`));
+  if (!url) return badUrl(res, req.body?.url);
   const r = insertBm.run({ url, title: '', description: '', image: '', favicon: '', note: '', text: '', saved_at: now(), status: null, checked_at: null, archived_at: null });
   const id = db.prepare('SELECT id FROM bookmarks WHERE url = ?').get(url).id;
   if (r.changes) enrichInBackground(id, url);
