@@ -40,7 +40,7 @@ The look is defined in `docs/brand/brand-board.html` (open it in a browser): lig
 
 ## Look and shortcuts
 
-Cool slate neutrals with one mint-teal accent, a heavy local sans (no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion.
+Cool slate neutrals with one mint-teal accent, a heavy local sans (no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page opens with a "Your library" hero and four live stat tiles (saved, this week, tags, dead links; shown only on the unfiltered first page), with soft accent light behind the page, glass panels and a faint grain (all off or solid under reduced transparency and reduced motion). Below it is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion.
 
 - `Ctrl`/`Cmd` + `K`: command palette (search, jump to a tag, open Import or Tags, or paste a URL to save it)
 - `/`: focus the search box

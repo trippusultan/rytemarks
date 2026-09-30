@@ -97,7 +97,7 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
   });
 
   await t.test('CSS: sidebar panels, chips with active state, badge', () => {
-    assert.match(css, /\.side\{[^}]*background:var\(--surface\)/);
+    assert.match(css, /\.side\{[^}]*background:color-mix\(in srgb,var\(--surface\) 78%,transparent\)/);
     assert.match(css, /\.tc\.on\{[^}]*background:var\(--acc\)/);
     assert.match(css, /\.tc\{[^}]*max-width:100%[^}]*overflow-wrap:anywhere/); // a very long tag wraps inside the narrow panel
     assert.match(css, /\.badge\.bad\{[^}]*color:var\(--bad\)/);
