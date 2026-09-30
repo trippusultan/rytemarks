@@ -35,7 +35,7 @@ npm install
 npm start          # http://localhost:4040
 ```
 
-Open <http://localhost:4040>, then [install the save button](#install-the-save-button). `better-sqlite3` ships prebuilt binaries for current Node on Windows, macOS and Linux; on anything else `npm install` needs a C++ toolchain.
+Open <http://localhost:4040>, then [install the save button](#install-the-save-button). `better-sqlite3` ships prebuilt binaries for Windows, macOS and Linux (x64 and arm64), so no compiler is needed on those; npm still runs a short `node-gyp` step that wants Python 3 on your PATH. If `npm install` fails with a `node-gyp` error, install Python 3 (and a C++ toolchain if your platform has no prebuilt binary).
 
 ## Configuration
 
