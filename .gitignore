@@ -1,3 +1,25 @@
+# dependencies
 node_modules/
+
+# your data: the database, its journal, the save-button key and every backup never leave your machine
 marks.db*
+*.db
+*.db-journal
+*.token
 backups/
+
+# secrets and local config
+.env
+.env.*
+!.env.example
+
+# logs, coverage, editor and OS noise
+*.log
+coverage/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# scratch space of local tooling
+.superpowers/

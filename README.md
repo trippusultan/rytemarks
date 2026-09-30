@@ -1,65 +1,100 @@
 # rytemarks
 
-Personal bookmark manager. Node + Express + better-sqlite3, server-rendered, one SQLite file, localhost only. No accounts, no telemetry.
+[![CI](https://github.com/trippusultan/rytemarks/actions/workflows/ci.yml/badge.svg)](https://github.com/trippusultan/rytemarks/actions/workflows/ci.yml)
+[![Licence: ISC](https://img.shields.io/badge/licence-ISC-blue.svg)](LICENSE)
 
-## Run
+**A fast, private, self-hosted bookmark manager.** Save any page with one click, tag it, and search the text of everything you have saved. It runs on your own machine, keeps your whole archive in a single SQLite file, and sends nothing anywhere.
+
+![rytemarks in the dark theme](docs/screenshots/home-dark.png)
+
+<p>
+  <img src="docs/screenshots/home-light.png" alt="The light theme" width="62%">
+  <img src="docs/screenshots/home-phone.png" alt="The phone layout with a bottom tab bar" width="26%">
+</p>
+
+## Features
+
+- **One-click saving** with a bookmarklet, or paste a URL into the box on the home page. Saving is instant; the page is fetched in the background.
+- **Full-text search** (SQLite FTS5) across titles, your notes and the **text of the pages you saved** (a Readability extract), with highlighted snippets. Combine it with several tags at once.
+- **Tags and notes**, with autocomplete, a tag manager (rename, merge, delete) and a cloud in the sidebar.
+- **Cards or list**, newest first, light and dark themes that follow your system, and a layout that works on a phone.
+- **Dead-link checker**: every Sunday at 03:00 (while the server runs), or on demand. Links that return 404 or 410 are flagged, and the flag clears if the page comes back.
+- **Import** a browser bookmarks export (Chrome, Firefox, Edge, Safari, Raindrop) with a preview first; folders become tags. **Export** everything as JSON or CSV, and **restore** from your own JSON export.
+- **Duplicate-proof**: tracking parameters (`utm_*`, `fbclid`, ...) and trailing slashes are ignored, so the same page saved twice is one bookmark.
+- **Safe by default**: automatic daily backups with rotation, undo for deletes, and a secret key on the save button.
+- **Private**: no accounts, no telemetry, no third-party requests, local fonts, icons inline.
+
+## Quick start
+
+You need **Node.js 22 or newer**.
 
 ```
+git clone https://github.com/trippusultan/rytemarks.git
+cd rytemarks
 npm install
 npm start          # http://localhost:4040
-npm test
 ```
 
-Binds to `127.0.0.1:4040` and rejects requests whose `Host` isn't localhost (DNS-rebinding guard) or whose `Origin` is a foreign site (except `/save`, which the bookmarklet needs).
+Open <http://localhost:4040>, then [install the save button](#install-the-save-button). `better-sqlite3` ships prebuilt binaries for current Node on Windows, macOS and Linux; on anything else `npm install` needs a C++ toolchain.
 
-## Where the data is
+## Configuration
 
-`marks.db` in this folder (override with `MARKS_DB=/path/to/file.db`). That single file is the whole archive: bookmarks, tags, notes, archived page text, and the search index. Back it up by copying it while the server is idle (it uses the default rollback journal, so there is no `-wal` sidecar to forget).
+Set these as environment variables before `npm start`.
 
-## Install the bookmarklet
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `PORT` | `4040` | Port to listen on. The save button has the port built in, so reinstall it after changing this. |
+| `MARKS_DB` | `marks.db` next to `server.js` | Path of the SQLite file that holds everything. |
+| `MARKS_BACKUPS` | `backups/` next to `server.js` | Folder for the automatic daily backups. |
 
-Open http://localhost:4040/bookmarklet. Drag the link to your bookmarks bar, or copy the code from the box into a new bookmark's URL field. If the standard button misbehaves (popups or form posts blocked), use the simple variant. You can also paste any URL into the box on the home page.
+The server always binds to `127.0.0.1`; there is deliberately no setting to change that (see [Security model](#security-model)).
 
-Saving is instant: the server stores the URL right away and fetches the page in the background. In the tab that opens, add tags and press Save and the tab closes itself. Saving a URL already in the archive just opens it for editing. Pages that block the server's fetch, or aren't HTML, are still saved (URL as title, no text).
+## Install the save button
 
-## Using it
+Open <http://localhost:4040/bookmarklet>, show your bookmarks bar (Ctrl+Shift+B, or Cmd+Shift+B on a Mac), and drag the **Save to rytemarks** button onto it. Click it on any page: a tab opens on the edit screen where you add tags and a note; press Save and the tab closes itself. If a site blocks the pop-up, use the "simple" variant on the same page. The server must be running when you click.
 
-- **Search**: FTS5 over title, note and archived article text (Readability extract). Words are prefix-matched, all must match. Combine with the tag filter in the sidebar; results are newest first.
-- **Link check**: every Sunday 03:00 (only while the server is running) each link is re-fetched and 404/410s get a red `404` badge, which clears if the link recovers. Timeouts and DNS errors are ignored as transient. Press **Check links now** in the footer to run it on demand; **Dead links (N)** in the sidebar lists the flagged ones.
-- **Import**: `/import`, any Netscape bookmarks HTML (Raindrop, Chrome, Firefox). Takes `TAGS`, `ADD_DATE` and `<DD>` notes; folders are ignored, non-http(s) links are dropped, existing URLs are skipped. Imports start without page text; press **Archive N pages** in the footer to fetch it in the background (one attempt per page).
-- **Undo**: deleting a bookmark shows an Undo button on the next page (one level, 5 minutes, held in memory).
-- **Export**: `/export?format=json` (everything, including page text) or `/export?format=csv` (no page text, since cells that large break spreadsheets; risky leading `= + - @` are prefixed with `'`).
+The button carries a secret key (a 36-character token stored in `marks.db.token` next to the database), so a web page you visit cannot make your server fetch URLs behind your back. If you ever see "Save link out of date", delete the old button and drag the new one from the same page.
 
-## Save button key
+## Your data, backups and restore
 
-The save button carries a secret key (36 hex characters in `marks.db.token` beside the database, never committed), so a web page you happen to visit cannot open `/save` and make the server fetch URLs. A save button from before the key existed shows "Save link out of date": delete it and drag the new one from the Save button page. Deleting the token file makes a new key on the next start (then reinstall the button). The home page add box and the palette save need no key; they are allowed because they come from rytemarks itself.
+Everything lives in **one file**, `marks.db`: bookmarks, tags, notes, saved page text and the search index. It uses SQLite's default rollback journal, so there is no `-wal` file to forget.
 
-## Importing, folders and restoring
+- **Automatic backups.** The server writes `backups/marks-YYYY-MM-DD.db` (named for the local day) at start-up if today's is missing and every day at 02:15 while it runs, keeping the newest 14. The home page shows the date of the last one. Other files in that folder are never touched.
+- **Backup on demand:** `npm run backup` (safe while the server is running; it counts as today's backup).
+- **Restore from a backup file:** stop the server, copy a `marks-YYYY-MM-DD.db` over `marks.db`, start it again.
+- **Restore from a JSON export:** stop the server, move `marks.db` aside, start it (it creates an empty one), open **Import** and choose a file from **Export JSON**. Bookmarks, tags, notes and saved text come back; links you already have are skipped.
+- **Clean up duplicates** saved before normalisation existed: `npm run dedupe` shows what would merge (a dry run); `npm run dedupe -- --apply` first backs up to `backups/marks-before-dedupe-<time>.db`, then merges each group into its oldest bookmark (notes joined, tags combined, longest page text kept).
+- **Export:** `/export?format=json` (everything, including page text) or `/export?format=csv` (no page text; risky leading `= + - @` are neutralised for spreadsheets).
+- **Start at login (Windows):** put a shortcut to `start-hidden.vbs` in `shell:startup` (Win+R) to run the server without a console window. On macOS and Linux use your login items, launchd or a systemd user service to run `npm start`.
 
-Import takes a browser bookmarks export (`.html`) or rytemarks' own JSON export. Folder names in a browser export become tags ("Bookmarks bar", "Other bookmarks" and similar root folders are ignored). To restore from a backup export: stop the server, move `marks.db` aside, start it (it creates an empty one), open Import and choose a file from Export JSON. Bookmarks, tags, notes and archived page text come back; links you already have are skipped.
+## Keyboard shortcuts
 
-## Cleaning up duplicates
+| Keys | Does |
+| --- | --- |
+| `Ctrl`/`Cmd` + `K` | Command palette: search, jump to a tag, open Import or Tags, or paste a URL to save it |
+| `/` | Focus the search box (opens the palette on pages that have none) |
+| `j` / `k` | Move through bookmarks; `Enter` opens one, `e` edits it |
+| `Ctrl`/`Cmd` + `Enter` | Save from inside the note box |
 
-URLs are normalised when you save or import: tracking parameters (`utm_*`, `fbclid`, `gclid` and friends), a bare `#` and trailing slashes are dropped, so the same page saved twice is one bookmark. A `#fragment` is part of the page and is always kept (Mega and Excalidraw keep their key there, Gmail its thread id). For bookmarks saved before that, `npm run dedupe` shows what would merge (a dry run); `npm run dedupe -- --apply` first writes `backups/marks-before-dedupe-<time>.db`, then merges each group into its oldest bookmark (notes joined, tags combined, longest page text kept).
+## Security model
 
-## Backups and auto-start
+rytemarks is a **single-user app for your own computer**, not a service for the internet. It binds to `127.0.0.1`, rejects requests whose `Host` is not localhost (DNS-rebinding guard) and refuses cross-site `POST`s; `/save` needs the save-button key or a request from the app's own pages. There is **no login**, so never expose the port to a network. The server fetches the links you save, and the database is not encrypted. Details, and how to report a vulnerability, are in [SECURITY.md](SECURITY.md).
 
-`npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run rytemarks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
+## Development
 
-The server also writes a dated backup to `backups/` (named for the local calendar day) at start-up if today's is missing and every day at 02:15 while it runs, keeping the newest 14 (other files in that folder are never touched). `npm run backup` uses the same crash-safe write and the same name, so it counts as today's backup. The home page Status panel shows the date of the last one. To restore, stop the server and copy a `marks-YYYY-MM-DD.db` over `marks.db`.
+```
+npm test           # node --test, about 20 seconds, no network needed
+```
 
-## Brand
+Tests run against a throwaway database and a fake local website, on Node 22 on Ubuntu and Windows in [CI](.github/workflows/ci.yml). The code is deliberately small: `server.js` holds the routes, rendering and styles; `backups.js`, `urls.js` and `dedupe.js` hold the pure helpers; `icons.js` holds the inline icon sprite. See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and how to run a scratch instance without touching your real bookmarks.
 
-The logo is a tally mark (four strokes and a ribbon) drawn as inline SVG, next to a "rytemarks" wordmark set in the terminal font; the favicon is the same mark. On the dark theme the strokes take the text colour, so nothing else is needed. `docs/brand/brand-board.html` holds the palette and tagline, and `test-brand.js` keeps the mark and palette in sync with the app. A PNG logo and wordmark were tried and dropped; the supplied files are kept in `docs/brand/logo/` and in git history (commit fcf255e). The database file is still `marks.db`.
+The logo is a tally mark (four strokes and a ribbon) drawn as inline SVG; `docs/brand/brand-board.html` holds the palette and type. The originals of the supplied logo artwork are in `docs/brand/logo/`. The database file keeps the name `marks.db` from the project's earlier name.
 
-## Look and shortcuts
+## Credits
 
-Cool slate neutrals with one mint-teal accent, a local terminal-style monospace stack (Cascadia Mono, JetBrains Mono, SF Mono, Menlo, Consolas; no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page opens with a "Your library" hero and four live stat tiles (saved, this week, tags, dead links; shown only on the unfiltered first page), with soft accent light behind the page, glass panels and a faint grain (all off or solid under reduced transparency and reduced motion). Below it is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion. Scrollbars are themed too: a slim rounded slate thumb that turns mint on hover (Chrome, Edge, Safari), or the standard thin bar in Firefox.
+- Icons: [Phosphor Icons](https://phosphoricons.com) (regular weight, MIT licence). The twenty in use are copied into `icons.js` together with the licence text.
+- Page text extraction: [@mozilla/readability](https://github.com/mozilla/readability) (Apache-2.0). Page metadata: [metascraper](https://metascraper.js.org). Also built on [Express](https://expressjs.com), [better-sqlite3](https://github.com/WiseLibs/better-sqlite3), [jsdom](https://github.com/jsdom/jsdom) and [node-cron](https://github.com/node-cron/node-cron); each keeps its own licence.
 
-Navigation is an icon + label top bar with the links centred and a filled Add button on the right. On phones the header is just the centred logo and the links move to a bottom tab bar (Bookmarks, Tags, Import); adding on a phone is the "Paste a URL" field on the home page. There is no search button in the header: search is the field on the home page, or the palette below. The footer is one slim bar with the credit and tool links. Check links and Archive pages live in the Status panel on the home page.
+## Licence
 
-Icons are [Phosphor Icons](https://phosphoricons.com) (regular weight, MIT licence). The twenty in use are copied into `icons.js` (licence text included) and served as one inline sprite, so there is no network request and no runtime dependency.
-
-- `Ctrl`/`Cmd` + `K`: command palette (search, jump to a tag, open Import or Tags, or paste a URL to save it)
-- `/`: focus the search box (opens the palette on pages without one)
-- `j` / `k`: move through bookmarks, `Enter` opens, `e` edits
+[ISC](LICENSE) © 2026 trippusultan

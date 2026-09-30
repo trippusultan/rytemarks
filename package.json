@@ -1,7 +1,7 @@
 {
-  "name": "marks",
+  "name": "rytemarks",
   "version": "1.0.0",
-  "description": "Personal bookmark manager",
+  "description": "A fast, private, self-hosted bookmark manager: one-click saving, tags, full-text search over the pages you saved, and your whole archive in a single SQLite file.",
   "main": "server.js",
   "scripts": {
     "test": "node --test",
@@ -9,9 +9,29 @@
     "backup": "node backup.js",
     "dedupe": "node dedupe.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "bookmarks",
+    "bookmark-manager",
+    "self-hosted",
+    "sqlite",
+    "fts5",
+    "express",
+    "raindrop-alternative",
+    "privacy"
+  ],
+  "author": "trippusultan",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trippusultan/rytemarks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trippusultan/rytemarks/issues"
+  },
+  "homepage": "https://github.com/trippusultan/rytemarks#readme",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "better-sqlite3": "^13.0.3",
@@ -23,5 +43,5 @@
     "metascraper-title": "^5.56.2",
     "node-cron": "^4.6.0"
   },
-  "private": "true"
+  "private": true
 }
