@@ -202,25 +202,37 @@ const safeBack = s => (/^\/(?![\/\\])/.test(String(s || '')) ? String(s) : '/');
 
 const BOOKMARKLET = `javascript:(function(){var f=document.createElement('form');f.method='POST';f.action='http://localhost:${PORT}/save';f.target='_blank';var i=document.createElement('input');i.type='hidden';i.name='url';i.value=location.href;f.appendChild(i);document.body.appendChild(f);f.submit();f.remove()})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
-const CSS = `:root{color-scheme:light dark;--mut:#777}
-body{font:15px/1.5 system-ui,sans-serif;max-width:960px;margin:0 auto;padding:1rem}
-header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
+const CSS = `:root{color-scheme:light dark;--bg:#fff;--fg:#1c1c1e;--mut:#6b6b73;--line:#e4e4e8;--acc:#2f6fed;--chip:#eef1f7;--hover:#f6f7fb;--bad:#c2410c;--ok:#15803d}
+@media(prefers-color-scheme:dark){:root{--bg:#141416;--fg:#ececf1;--mut:#9a9aa6;--line:#2a2a30;--acc:#7aa2ff;--chip:#23262f;--hover:#1b1b20;--bad:#fb923c;--ok:#4ade80}}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,sans-serif;max-width:1000px;margin:0 auto;padding:1rem 1.25rem 3rem}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
+header>a{color:var(--fg);font-size:1.15rem}
 header form{flex:1;display:flex;gap:.5rem;min-width:14rem}header input{flex:1}
-input,textarea,button{font:inherit;padding:.35rem .5rem}
-.layout{display:grid;grid-template-columns:1fr 12rem;gap:1.5rem}
+input,textarea,button{font:inherit;padding:.45rem .65rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+button{background:var(--acc);border-color:var(--acc);color:#fff;cursor:pointer}button:hover{filter:brightness(1.08)}
+.layout{display:grid;grid-template-columns:1fr 12rem;gap:2rem}
 @media(max-width:700px){.layout{grid-template-columns:1fr}}
 ul{list-style:none;padding:0;margin:0}
-li.b{display:flex;gap:.7rem;padding:.6rem 0;border-bottom:1px solid #8884}
+li.b{display:flex;gap:.75rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);border-radius:8px}
+li.b:hover{background:var(--hover)}
 .fav{width:16px;height:16px;margin-top:.3rem;flex:none}
-.meta{color:var(--mut);font-size:13px}.meta a{color:inherit}
-.dead{color:#c33;font-weight:600;font-size:12px}
-aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.1rem 0}
-label{display:block;margin:.8rem 0 .2rem}
+.meta{color:var(--mut);font-size:13px}.meta a{color:inherit}.meta a:hover{color:var(--acc)}
+.dead{color:var(--bad);font-weight:600;font-size:12px}
+aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.15rem 0}aside a.on{color:var(--fg);font-weight:700}
+label{display:block;margin:.9rem 0 .25rem;font-weight:600;font-size:13px}
 form.edit input[type=text],textarea{width:100%;box-sizing:border-box}
-footer{margin-top:2rem;color:var(--mut);font-size:13px}footer a{color:inherit}
+footer{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px}footer a{color:inherit}
 .add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
-mark{background:#fd0;color:#000}
-form.inline{display:inline}form.inline button{padding:.1rem .4rem;font-size:13px}`;
+mark{background:#fd0;color:#000;border-radius:3px;padding:0 .1rem}
+form.inline{display:inline}form.inline button{padding:.1rem .5rem;font-size:13px}
+.flash{background:var(--chip);border-left:3px solid var(--ok);padding:.5rem .75rem;border-radius:8px}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
+.chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:999px;padding:.15rem .65rem;font-size:13px}
+.chip.on{background:var(--acc);color:#fff}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style>
@@ -266,7 +278,7 @@ app.get('/', (req, res) => {
   }
   const toggle = t => (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]).join(',');
   const item = b => h`<li class=b>
-    <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="this.style.visibility='hidden'">
+    <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}">
     <div><a href="${b.url}">${b.title || b.url}</a> ${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}
     <div class=meta>${domain(b.url)} · ${b.tags.map(t => h`<a href="/${qs({ tag: t })}">#${t}</a> `)}· <span title="${date(b.saved_at)}">${ago(b.saved_at)}</span> · <a href="/b/${b.id}${backParam}">edit</a></div>
     ${b.snippet && h`<div class=meta>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</div>`}
@@ -372,13 +384,15 @@ app.post('/undo', (req, res) => {
 });
 
 app.get('/import', (req, res) => res.send(page('Import', h`<h2>Import bookmarks</h2>
-  <p>Netscape bookmarks HTML export (Raindrop, Chrome, Firefox, …). Existing URLs are skipped; page text is not fetched for imports.</p>
+  <p>Netscape bookmarks HTML export (Raindrop, Chrome, Firefox, …). Existing URLs are skipped. Page text can be fetched afterwards with the Archive button.</p>
   <input type=file id=f accept=".html,.htm"><p id=out></p>
+  <div id=next hidden><a href="/">View bookmarks</a> · <form method=post action="/archive" class=inline><button>Archive pages now</button></form></div>
   <script>
   document.getElementById('f').onchange=async e=>{
     const out=document.getElementById('out');out.textContent='Importing…';
     const r=await fetch('/import',{method:'POST',headers:{'content-type':'text/plain'},body:e.target.files[0]});
-    out.textContent=await r.text();
+    out.textContent=r.ok?await r.text():'Import failed ('+r.status+').';
+    document.getElementById('next').hidden=!r.ok;
   };
   </script>`)));
 
