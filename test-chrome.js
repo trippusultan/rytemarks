@@ -37,7 +37,7 @@ test('chrome: toast, add composer, header, footer', async t => {
     const footer = /<footer>[\s\S]*<\/footer>/.exec(html)[0];
     assert.match(footer, /<div class=fz><h3>Tools<\/h3><div class=fl><a class=drag href="javascript:/);
     assert.match(footer, /<div class=fz><h3>Maintenance<\/h3><div class=jobs><form method=post action="\/check" class=inline><button>Check links now<\/button><\/form>/);
-    assert.match(footer, /<div class="fz about"><h3>About<\/h3><p>Made by <a href="https:\/\/github\.com\/trippusiltan" rel="noopener noreferrer">@trippusiltan<\/a><\/p><p>Built on Node\.js, Express, SQLite, Mozilla Readability, metascraper and jsdom\.<\/p><\/div>/);
+    assert.match(footer, /<div class="fz about"><h3>About<\/h3><p>Made by <a href="https:\/\/github\.com\/trippusultan" rel="noopener noreferrer">@trippusultan<\/a><\/p><p>Built on Node\.js, Express, SQLite, Mozilla Readability, metascraper and jsdom\.<\/p><\/div>/);
     assert.doesNotMatch(footer.replace(/<[^>]+>/g, ''), / · /);
     assert.match(css, /form\.inline button\{[^}]*background:transparent/);
     assert.match(css, /footer\{[^}]*display:grid[^}]*grid-template-columns:/);

@@ -363,7 +363,7 @@ ${h`<a class=skip href="#main">Skip to content</a><header><a href="/" class=bran
 <main id=main>${body}</main>
 <footer><div class=fz><h3>Tools</h3><div class=fl><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">+ Save to marks</a><a href="/bookmarklet">Install help</a><a href="/import">Import</a><a href="/export?format=json">Export JSON</a><a href="/export?format=csv">Export CSV</a></div></div>
 <div class=fz><h3>Maintenance</h3><div class=jobs>${jobsHtml()}</div></div>
-<div class="fz about"><h3>About</h3><p>Made by <a href="https://github.com/trippusiltan" rel="noopener noreferrer">@trippusiltan</a></p><p>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom.</p></div></footer>
+<div class="fz about"><h3>About</h3><p>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">@trippusultan</a></p><p>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom.</p></div></footer>
 <dialog id=palette aria-label="Command palette"><input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
 <script>(()=>{
 const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save'),openBtn=doc.getElementById('open-palette');
