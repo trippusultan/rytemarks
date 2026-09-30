@@ -109,6 +109,12 @@ const renameTag = db.transaction((from, to) => {
   db.prepare('UPDATE OR IGNORE bookmark_tags SET tag = ? WHERE tag = ?').run(to, from);
   db.prepare('DELETE FROM bookmark_tags WHERE tag = ?').run(from); // rows that already had `to`
 });
+const FLASH = { deleted: 'Bookmark deleted.', restored: 'Bookmark restored.', saved: 'Saved.' };
+const UNDO_MS = 5 * 60 * 1000;
+const undo = { item: null }; // ponytail: one level, in memory, lost on restart; add a deleted_at column for more
+const restoreStmt = db.prepare(`INSERT OR IGNORE INTO bookmarks(id,url,title,description,image,favicon,note,text,saved_at,status,checked_at,archived_at)
+  VALUES(@id,@url,@title,@description,@image,@favicon,@note,@text,@saved_at,@status,@checked_at,@archived_at)`);
+const withOk = (path, key) => { const u = new URL(path, 'http://x'); u.searchParams.set('ok', key); return u.pathname + u.search; };
 const SELECT = `SELECT b.*, (SELECT group_concat(tag, ',') FROM bookmark_tags WHERE bookmark_id = b.id) AS tags FROM bookmarks b`;
 const withTags = r => r && { ...r, tags: r.tags ? r.tags.split(',').sort() : [] };
 const allTags = () => db.prepare('SELECT tag, count(*) n FROM bookmark_tags GROUP BY tag ORDER BY n DESC, tag').all();
@@ -249,6 +255,7 @@ app.get('/', (req, res) => {
     .all(...args, PAGE + 1, (pg - 1) * PAGE).map(withTags);
   const total = db.prepare(`SELECT count(*) n FROM bookmarks b ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`).get(...args).n;
   const filtered = !!(q || tag || dead), empty = !filtered && total === 0;
+  const ok = Object.hasOwn(FLASH, req.query.ok) ? FLASH[req.query.ok] : '';
   const backParam = qs({ back: req.originalUrl === '/' ? '' : req.originalUrl });
   const more = rows.length > PAGE && rows.pop();
   if (fq && rows.length) { // \x01/\x02 mark hits; page text is escaped before they become <mark>
@@ -264,6 +271,7 @@ app.get('/', (req, res) => {
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
     <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
+    ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
     ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged #${tag}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
@@ -311,7 +319,7 @@ app.get('/b/:id', (req, res) => {
     <div class=chips>${allTags().slice(0, 12).map(t => h`<button type=button class=chip data-t="${t.tag}">#${t.tag}</button>`)}</div>
     <label for=note>Note</label><textarea id=note name=note rows=5>${b.note}</textarea>
     <p><button>Save</button> <a href="${back}">Cancel</a></p></form>
-    <form method=post action="/b/${b.id}/delete" onsubmit="return confirm('Delete this bookmark?')"><input type=hidden name=back value="${back}"><button>Delete</button></form>
+    <form method=post action="/b/${b.id}/delete"><input type=hidden name=back value="${back}"><button>Delete</button></form>
     <script>
     // Native datalist, but options are rebuilt for the tag after the last comma.
     const T=${raw(tags)},inp=document.getElementById('tags'),dl=document.getElementById('tl');
@@ -341,12 +349,24 @@ app.post('/b/:id', (req, res) => {
   if (!r.changes) return res.sendStatus(404);
   setTags(id, parseTags(req.body.tags));
   if (req.body.done) return res.send(page('Saved', h`<p>Saved ✓ You can close this tab.</p><p><a href="/">Open marks</a></p><script>window.close()</script>`));
-  res.redirect(303, safeBack(req.body?.back));
+  res.redirect(303, withOk(safeBack(req.body?.back), 'saved'));
 });
 
 app.post('/b/:id/delete', (req, res) => {
-  db.prepare('DELETE FROM bookmarks WHERE id=?').run(+req.params.id);
-  res.redirect(303, safeBack(req.body?.back));
+  const id = +req.params.id;
+  const b = withTags(db.prepare(`${SELECT} WHERE b.id=?`).get(id));
+  if (b) { undo.item = { b, at: Date.now() }; db.prepare('DELETE FROM bookmarks WHERE id=?').run(id); }
+  res.redirect(303, withOk(safeBack(req.body?.back), 'deleted'));
+});
+
+app.post('/undo', (req, res) => {
+  const u = undo.item;
+  undo.item = null;
+  if (u && Date.now() - u.at < UNDO_MS && restoreStmt.run(u.b).changes) {
+    setTags(u.b.id, u.b.tags);
+    return res.redirect(303, '/?ok=restored');
+  }
+  res.redirect(303, '/');
 });
 
 app.get('/import', (req, res) => res.send(page('Import', h`<h2>Import bookmarks</h2>
@@ -402,7 +422,7 @@ app.get('/export', (req, res) => {
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
 
-module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`marks: http://localhost:${PORT}  db: ${db.name}`));
