@@ -232,9 +232,15 @@ const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' vi
 const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
-const CSS = `:root{color-scheme:light dark;--r:8px;--mono:"Cascadia Mono","Cascadia Code","JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;--ui:var(--mono);--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c;--glow:6%;--grain:.05}
+const CSS = `:root{color-scheme:light dark;--r:8px;--sb:color-mix(in srgb,var(--mut) 75%,transparent);--mono:"Cascadia Mono","Cascadia Code","JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;--ui:var(--mono);--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c;--glow:6%;--grain:.05}
 @media(prefers-color-scheme:dark){:root{--bg:#0a1013;--surface:#111a1e;--fg:#e7f0f2;--mut:#8fa2a9;--line:#223037;--acc:#3fe0bd;--on-acc:#03211a;--chip:#19252a;--hover:#152127;--bad:#ff8b6e;--glow:18%;--grain:.06}}
 *{box-sizing:border-box}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb);border:2px solid transparent;background-clip:content-box;border-radius:var(--r)}
+::-webkit-scrollbar-thumb:hover{background:var(--acc);background-clip:content-box}
+::-webkit-scrollbar-corner{background:transparent}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:var(--sb) transparent}}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 var(--ui);min-height:100dvh;display:flex;flex-direction:column}
 [hidden]{display:none!important}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60rem 38rem at 88% -8%,color-mix(in srgb,var(--acc) var(--glow),transparent),transparent 62%),radial-gradient(44rem 30rem at -8% 22%,color-mix(in srgb,var(--acc) var(--glow),transparent),transparent 58%)}
