@@ -89,6 +89,11 @@ const setTags = db.transaction((id, tags) => {
   db.prepare('DELETE FROM bookmark_tags WHERE bookmark_id=?').run(id);
   for (const t of tags) db.prepare('INSERT INTO bookmark_tags VALUES(?,?)').run(id, t);
 });
+const renameTag = db.transaction((from, to) => {
+  if (from === to) return;
+  db.prepare('UPDATE OR IGNORE bookmark_tags SET tag = ? WHERE tag = ?').run(to, from);
+  db.prepare('DELETE FROM bookmark_tags WHERE tag = ?').run(from); // rows that already had `to`
+});
 const SELECT = `SELECT b.*, (SELECT group_concat(tag, ',') FROM bookmark_tags WHERE bookmark_id = b.id) AS tags FROM bookmarks b`;
 const withTags = r => r && { ...r, tags: r.tags ? r.tags.split(',').sort() : [] };
 const allTags = () => db.prepare('SELECT tag, count(*) n FROM bookmark_tags GROUP BY tag ORDER BY n DESC, tag').all();
@@ -234,7 +239,7 @@ app.get('/', (req, res) => {
     ${dead && h`<p class=meta>Dead links only · <a href="/">clear</a></p>`}
     <ul>${rows.map(item)}</ul>${!rows.length && h`<p class=meta>Nothing here.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</main>
-    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
+    <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
 
 app.get('/save', (req, res) => {
@@ -315,6 +320,23 @@ app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) =>
   const items = parseNetscape(typeof req.body === 'string' ? req.body : '');
   const added = importAll(items);
   res.type('text').send(`Imported ${added} new of ${items.length} http(s) links.`);
+});
+
+app.get('/tags', (req, res) => res.send(page('Tags', h`<h2>Tags</h2><ul>${allTags().map(t => h`<li>
+  <a href="/${qs({ tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span>
+  <form method=post action="/tags/rename" class=inline><input type=hidden name=from value="${t.tag}"><input type=text name=to placeholder="rename or merge into…"><button>Rename</button></form>
+  <form method=post action="/tags/delete" class=inline onsubmit="return confirm('Remove this tag from all bookmarks?')"><input type=hidden name=tag value="${t.tag}"><button>Delete</button></form></li>`)}</ul>`)));
+
+app.post('/tags/rename', (req, res) => {
+  const to = parseTags(req.body.to)[0];
+  if (!to) return res.status(400).send(page('Bad tag', h`<p>Give the new tag name.</p>`));
+  renameTag(String(req.body.from), to);
+  res.redirect(303, '/tags');
+});
+
+app.post('/tags/delete', (req, res) => {
+  db.prepare('DELETE FROM bookmark_tags WHERE tag = ?').run(String(req.body.tag));
+  res.redirect(303, '/tags');
 });
 
 app.post('/archive', (req, res) => { background('archive', archiveMissing); res.redirect(303, '/'); });
