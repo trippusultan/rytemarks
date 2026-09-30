@@ -183,6 +183,16 @@ const render = v => v instanceof Safe ? v.s : Array.isArray(v) ? v.map(render).j
 const h = (s, ...v) => new Safe(s.reduce((o, str, i) => o + str + (i < v.length ? render(v[i]) : ''), ''));
 const qs = o => { const s = new URLSearchParams(Object.entries(o).filter(([, v]) => v && v !== 1)).toString(); return s ? '?' + s : ''; };
 const date = t => new Date(t * 1000).toISOString().slice(0, 10);
+const ago = (t, at = now()) => {
+  const s = at - t;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  if (s < 7 * 86400) return `${Math.floor(s / 86400)}d ago`;
+  return date(t);
+};
+// Only local paths: a lone leading "/" (not "//" or "/\", which browsers treat as another host).
+const safeBack = s => (/^\/(?![\/\\])/.test(String(s || '')) ? String(s) : '/');
 
 const BOOKMARKLET = `javascript:(function(){var f=document.createElement('form');f.method='POST';f.action='http://localhost:${PORT}/save';f.target='_blank';var i=document.createElement('input');i.type='hidden';i.name='url';i.value=location.href;f.appendChild(i);document.body.appendChild(f);f.submit();f.remove()})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
@@ -212,7 +222,8 @@ ${h`<header><a href="/"><b>marks</b></a>
 <form action="/"><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
 ${body}
 <footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
-<a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a> ${jobsHtml()}</footer>`.s}`;
+<a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a> ${jobsHtml()}</footer>
+<script>document.addEventListener('keydown',e=>{const t=e.target.tagName;if(e.key==='/'&&t!=='INPUT'&&t!=='TEXTAREA'){e.preventDefault();document.querySelector('input[name=q]').focus()}})</script>`.s}`;
 
 // ---------- app ----------
 const app = express();
@@ -236,6 +247,9 @@ app.get('/', (req, res) => {
   if (dead) where.push('b.status IN (404, 410)');
   const rows = db.prepare(`${SELECT} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY b.saved_at DESC, b.id DESC LIMIT ? OFFSET ?`)
     .all(...args, PAGE + 1, (pg - 1) * PAGE).map(withTags);
+  const total = db.prepare(`SELECT count(*) n FROM bookmarks b ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`).get(...args).n;
+  const filtered = !!(q || tag || dead), empty = !filtered && total === 0;
+  const backParam = qs({ back: req.originalUrl === '/' ? '' : req.originalUrl });
   const more = rows.length > PAGE && rows.pop();
   if (fq && rows.length) { // \x01/\x02 mark hits; page text is escaped before they become <mark>
     const snip = new Map(db.prepare(`SELECT rowid, snippet(fts, -1, char(1), char(2), '…', 20) s FROM fts
@@ -245,14 +259,15 @@ app.get('/', (req, res) => {
   const item = b => h`<li class=b>
     <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="this.style.visibility='hidden'">
     <div><a href="${b.url}">${b.title || b.url}</a> ${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}
-    <div class=meta>${domain(b.url)} · ${b.tags.map(t => h`<a href="/${qs({ tag: t })}">#${t}</a> `)}· ${date(b.saved_at)} · <a href="/b/${b.id}">edit</a></div>
+    <div class=meta>${domain(b.url)} · ${b.tags.map(t => h`<a href="/${qs({ tag: t })}">#${t}</a> `)}· <span title="${date(b.saved_at)}">${ago(b.saved_at)}</span> · <a href="/b/${b.id}${backParam}">edit</a></div>
     ${b.snippet && h`<div class=meta>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</div>`}
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
     <main><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
-    ${tag && h`<p class=meta>Tag <b>#${tag}</b> · <a href="/${qs({ q })}">clear</a></p>`}
-    ${dead && h`<p class=meta>Dead links only · <a href="/">clear</a></p>`}
-    <ul>${rows.map(item)}</ul>${!rows.length && h`<p class=meta>Nothing here.</p>`}
+    ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged #${tag}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
+    <ul>${rows.map(item)}</ul>
+    ${empty && h`<div class=empty><h3>Nothing saved yet</h3><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
+    ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</main>
     <aside><p class=meta><a href="/?dead=1">Dead links (${db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n})</a></p><p class=meta><a href="/tags">Manage tags</a></p><ul>${allTags().map(t => h`<li><a href="/${qs({ q, tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span></li>`)}</ul></aside></div>`, { q, tag }));
 });
@@ -286,16 +301,17 @@ app.get('/b/:id', (req, res) => {
   const b = withTags(db.prepare(`${SELECT} WHERE b.id=?`).get(+req.params.id));
   if (!b) return res.status(404).send(page('Not found', h`<p>No such bookmark.</p>`));
   const tags = JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c');
+  const back = safeBack(req.query.back);
   res.send(page(b.title || b.url, h`<h2><a href="${b.url}">${b.title || b.url}</a></h2><p class=meta>${b.url}</p>
     ${req.query.new && h`<p class=flash role=status>Saved ✓ ${!b.archived_at && 'Fetching the page in the background: add tags now.'}</p>`}
     ${req.query.dup && h`<p class=flash role=status>Already saved: edit it below.</p>`}
-    <form class=edit method=post action="/b/${b.id}">${req.query.new && h`<input type=hidden name=done value=1>`}
+    <form class=edit method=post action="/b/${b.id}">${req.query.new && h`<input type=hidden name=done value=1>`}<input type=hidden name=back value="${back}">
     <label for=title>Title</label><input type=text id=title name=title value="${b.title}" placeholder="${domain(b.url)}">
     <label for=tags>Tags (comma separated)</label><input type=text id=tags name=tags value="${b.tags.join(', ')}" autocomplete=off list=tl autofocus><datalist id=tl></datalist>
     <div class=chips>${allTags().slice(0, 12).map(t => h`<button type=button class=chip data-t="${t.tag}">#${t.tag}</button>`)}</div>
     <label for=note>Note</label><textarea id=note name=note rows=5>${b.note}</textarea>
-    <p><button>Save</button> <a href="/">Cancel</a></p></form>
-    <form method=post action="/b/${b.id}/delete" onsubmit="return confirm('Delete this bookmark?')"><button>Delete</button></form>
+    <p><button>Save</button> <a href="${back}">Cancel</a></p></form>
+    <form method=post action="/b/${b.id}/delete" onsubmit="return confirm('Delete this bookmark?')"><input type=hidden name=back value="${back}"><button>Delete</button></form>
     <script>
     // Native datalist, but options are rebuilt for the tag after the last comma.
     const T=${raw(tags)},inp=document.getElementById('tags'),dl=document.getElementById('tl');
@@ -325,12 +341,12 @@ app.post('/b/:id', (req, res) => {
   if (!r.changes) return res.sendStatus(404);
   setTags(id, parseTags(req.body.tags));
   if (req.body.done) return res.send(page('Saved', h`<p>Saved ✓ You can close this tab.</p><p><a href="/">Open marks</a></p><script>window.close()</script>`));
-  res.redirect(303, '/');
+  res.redirect(303, safeBack(req.body?.back));
 });
 
 app.post('/b/:id/delete', (req, res) => {
   db.prepare('DELETE FROM bookmarks WHERE id=?').run(+req.params.id);
-  res.redirect(303, '/');
+  res.redirect(303, safeBack(req.body?.back));
 });
 
 app.get('/import', (req, res) => res.send(page('Import', h`<h2>Import bookmarks</h2>
@@ -386,7 +402,7 @@ app.get('/export', (req, res) => {
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
 
-module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`marks: http://localhost:${PORT}  db: ${db.name}`));
