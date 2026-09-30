@@ -177,8 +177,8 @@ const background = (name, fn) => {
   fn().catch(console.error).finally(() => { busy = null; });
   return true;
 };
-const jobsHtml = () => busy ? h`· ${busy} running…`
-  : h`· <form method=post action="/check" class=inline><button>Check links now</button></form>${pending() > 0 && h` <form method=post action="/archive" class=inline><button>Archive ${pending()} pages</button></form>`}`;
+const jobsHtml = () => busy ? h`<span>${busy} running…</span>`
+  : h`<form method=post action="/check" class=inline><button>Check links now</button></form>${pending() > 0 && h`<form method=post action="/archive" class=inline><button>Archive ${pending()} pages</button></form>`}`;
 
 // Netscape export: <DT><A HREF ADD_DATE TAGS>title</A> [<DD>note]. Only http(s) links survive.
 function parseNetscape(html) {
@@ -240,7 +240,10 @@ a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding:.7rem max(1.25rem,calc((100vw - 1200px)/2));background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line)}
 @media(prefers-reduced-transparency:reduce){header{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
 main{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
-footer{max-width:1200px;margin:0 auto;padding:1rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px}footer a{color:inherit}
+footer{max-width:1200px;margin:0 auto;padding:1rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem 2rem}footer a{color:inherit}
+.fl,.jobs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.25rem}.jobs{gap:.5rem}
+.drag{padding:.25rem .6rem;border:1px dashed var(--line);border-radius:var(--r);color:var(--fg);cursor:grab}
+.drag:hover{border-color:var(--acc);color:var(--acc);text-decoration:none}
 .brand{display:flex;align-items:center;gap:.55rem;color:var(--fg)}.brand:hover{text-decoration:none}
 .mark{display:block}
 .wordmark{font-family:var(--sans);font-size:1.5rem;font-weight:750;letter-spacing:-.045em;line-height:1}
@@ -301,9 +304,13 @@ aside{position:sticky;top:5rem;max-height:calc(100vh - 6rem);overflow:auto;displ
 .badge.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
 label{display:block;margin:.9rem 0 .25rem;font-weight:600;font-size:13px}
 form.edit input[type=text],textarea{width:100%}
-.add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
+.add{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;padding:.25rem .25rem .25rem .9rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.add:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.add input{flex:1;padding:.55rem 0;border:0;background:transparent;outline:none}
+.sr{position:absolute;width:1px;height:1px;margin:0;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:var(--r);padding:0 .1rem}
-form.inline{display:inline}form.inline button{padding:.1rem .5rem;font-size:13px}
+form.inline{display:inline}form.inline button{padding:.2rem .65rem;font-size:13px;font-weight:500;background:transparent;color:var(--fg);border-color:var(--line)}
+form.inline button:hover{border-color:var(--acc);color:var(--acc);filter:none}
 .flash{background:var(--chip);border-left:3px solid var(--acc);padding:.5rem .75rem;border-radius:var(--r)}
 .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
 .chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:var(--r);padding:.15rem .65rem;font-size:13px;font-weight:500}
@@ -317,6 +324,11 @@ form[action$="/delete"] button{background:transparent;color:var(--bad);border-co
 #pal-list{max-height:50vh;overflow:auto;padding:.35rem}
 #pal-list a{display:block;padding:.55rem .75rem;color:var(--fg);border-radius:var(--r)}
 #pal-list a[aria-selected=true]{background:var(--hover);box-shadow:inset 3px 0 0 var(--acc);text-decoration:none}
+.toast{position:fixed;left:50%;bottom:1.25rem;z-index:40;display:flex;align-items:center;gap:.6rem;width:max-content;max-width:calc(100vw - 2rem);padding:.6rem .9rem;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 12px 32px color-mix(in srgb,var(--acc) 16%,transparent),0 2px 6px color-mix(in srgb,var(--fg) 10%,transparent);transform:translateX(-50%);animation:toast 4.5s cubic-bezier(.16,1,.3,1) forwards}
+.toast.keep{animation:toast-in .35s cubic-bezier(.16,1,.3,1) backwards}
+.tick{color:var(--acc);font-weight:700}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,12px)}8%,86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,6px);visibility:hidden}}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,12px)}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 button,.chip,a,.card{transition:background-color .15s,color .15s,border-color .15s,box-shadow .2s,transform .2s cubic-bezier(.16,1,.3,1)}
 button:active,.chip:active{transform:scale(.98)}
@@ -336,10 +348,10 @@ const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html l
 <script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
 <link rel=icon href="${FAVICON}"><style>${CSS}</style>
 ${h`<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>
-<form action="/" role=search><div class=field><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button type=button class=kbd id=open-palette aria-label="Open command palette">Ctrl K</button></div><button>Search</button></form></header>
+<form action="/" role=search><div class=field><input type=search name=q value="${q}" placeholder="Search bookmarks" aria-label="Search title, note and page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button type=button class=kbd id=open-palette aria-label="Open command palette">Ctrl K</button></div><button class=sr>Search</button></form></header>
 <main id=main>${body}</main>
-<footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
-<a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a> ${jobsHtml()}</footer>
+<footer><div class=fl><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">+ Save to marks</a><a href="/bookmarklet">Install help</a><a href="/import">Import</a><a href="/export?format=json">Export JSON</a><a href="/export?format=csv">Export CSV</a></div>
+<div class=jobs>${jobsHtml()}</div></footer>
 <dialog id=palette aria-label="Command palette"><input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
 <script>(()=>{
 const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save'),openBtn=doc.getElementById('open-palette');
@@ -407,6 +419,7 @@ app.get('/', (req, res) => {
   const total = db.prepare(`SELECT count(*) n FROM bookmarks b ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`).get(...args).n;
   const filtered = !!(q || tag || dead), empty = !filtered && total === 0;
   const ok = Object.hasOwn(FLASH, req.query.ok) ? FLASH[req.query.ok] : '';
+  const keepToast = req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS; // Undo stays until you navigate
   const backParam = qs({ back: req.originalUrl === '/' ? '' : req.originalUrl });
   const more = rows.length > PAGE && rows.pop();
   if (fq && rows.length) { // \x01/\x02 mark hits; page text is escaped before they become <mark>
@@ -423,8 +436,8 @@ app.get('/', (req, res) => {
     <div class=foot>${b.tags.map(t => h`<a class=tg href="/${qs({ tag: t })}">#${t}</a>`)}<span class=when title="${date(b.saved_at)}">${ago(b.saved_at)}</span><a class=edit href="/b/${b.id}${backParam}">edit</a></div></li>`;
   const tagList = allTags(), deadCount = db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n;
   res.send(page('marks', h`<div class=layout>
-    <section><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
-    ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
+    <section><form method=post action="/save" class=add><label class=sr for=add-url>Web address to save</label><input id=add-url type=text name=url inputmode=url autocomplete=off placeholder="Paste a URL to save" required><button>Save</button></form>
+    ${ok && h`<div class="toast${keepToast ? ' keep' : ''}" role=status><span class=tick>✓</span>${ok}${keepToast && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</div>`}
     <div class=toolbar>${filtered ? h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>` : h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}</p>`}
       <div class=seg role=group aria-label="View"><button type=button class=vt data-view=cards aria-pressed=true>Cards</button><button type=button class=vt data-view=list aria-pressed=false>List</button></div></div>
     <ul class=bento>${rows.map(item)}</ul>
