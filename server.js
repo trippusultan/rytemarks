@@ -240,7 +240,10 @@ a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding:.7rem max(1.25rem,calc((100vw - 1200px)/2));background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line)}
 @media(prefers-reduced-transparency:reduce){header{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
 main{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
-footer{max-width:1200px;margin:0 auto;padding:1rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem 2rem}footer a{color:inherit}
+footer{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1.5rem 2rem;align-items:start}footer a{color:inherit}
+@media(max-width:700px){footer{grid-template-columns:1fr}}
+.fz h3{margin:0 0 .6rem;font-size:13px;color:var(--fg);letter-spacing:-.01em}.fz p{margin:0 0 .35rem}
+.about a{color:var(--acc);font-weight:500}
 .fl,.jobs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.25rem}.jobs{gap:.5rem}
 .drag{padding:.25rem .6rem;border:1px dashed var(--line);border-radius:var(--r);color:var(--fg);cursor:grab}
 .drag:hover{border-color:var(--acc);color:var(--acc);text-decoration:none}
@@ -248,11 +251,17 @@ footer{max-width:1200px;margin:0 auto;padding:1rem 1.25rem 2.5rem;border-top:1px
 .mark{display:block}
 .wordmark{font-family:var(--sans);font-size:1.5rem;font-weight:750;letter-spacing:-.045em;line-height:1}
 .tagline{font-weight:650;font-size:1.15rem;letter-spacing:-.02em;color:var(--acc);margin:.25rem 0 .75rem}
+header nav{display:flex;gap:.15rem;align-items:center}
+header nav a{padding:.4rem .75rem;border-radius:var(--r);color:var(--mut);font-weight:500;white-space:nowrap}
+header nav a:hover{background:var(--hover);color:var(--fg);text-decoration:none}
+header nav a[aria-current=page]{color:var(--fg);background:var(--chip);box-shadow:inset 0 -2px 0 var(--acc)}
+@media(max-width:640px){header nav{order:3;width:100%;overflow-x:auto}}
 header form{flex:1;display:flex;gap:.5rem;min-width:14rem;align-items:center}
+@media(max-width:640px){header{position:static}header form{min-width:0}}
 .field{display:flex;flex:1;align-items:center;gap:.4rem;padding-right:.4rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .field:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 .field input{flex:1;border:0;background:transparent;outline:none}
-.kbd{background:var(--chip);color:var(--mut);border:1px solid var(--line);padding:.1rem .45rem;font:11px var(--mono);font-weight:500}
+.kbd{background:var(--chip);color:var(--mut);border:1px solid var(--line);padding:.1rem .45rem;font:11px var(--mono);font-weight:500;white-space:nowrap}
 input,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--fg)}
 button{font:inherit;padding:.5rem .85rem;border:1px solid var(--acc);border-radius:var(--r);background:var(--acc);color:var(--on-acc);font-weight:600;cursor:pointer}button:hover{filter:brightness(1.08)}
 .layout{display:grid;grid-template-columns:1fr 13rem;gap:2rem;align-items:start}
@@ -340,18 +349,21 @@ button:active,.chip:active{transform:scale(.98)}
 const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
 const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 
+const NAV = [['home', '/', 'Bookmarks'], ['tags', '/tags', 'Tags'], ['import', '/import', 'Import']];
+const navHtml = cur => h`<nav aria-label="Primary">${NAV.map(([k, href, label]) => h`<a href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${label}</a>`)}</nav>`;
 const paletteTags = () => JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c').replace(/'/g, '\\u0027').replace(/&/g, '\\u0026');
-const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
+const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
 <meta name=description content="Your personal bookmark archive: saved pages, tags, notes and full-text search on your own machine.">
 <meta name=theme-color content="#f3f6f7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#0a1013" media="(prefers-color-scheme: dark)">
 <script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
 <link rel=icon href="${FAVICON}"><style>${CSS}</style>
 ${h`<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>
-<form action="/" role=search><div class=field><input type=search name=q value="${q}" placeholder="Search bookmarks" aria-label="Search title, note and page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button type=button class=kbd id=open-palette aria-label="Open command palette">Ctrl K</button></div><button class=sr>Search</button></form></header>
+<form action="/" role=search><div class=field><input type=search name=q value="${q}" placeholder="Search bookmarks" aria-label="Search title, note and page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button type=button class=kbd id=open-palette aria-label="Open command palette">Ctrl K</button></div><button class=sr>Search</button></form>${navHtml(cur)}</header>
 <main id=main>${body}</main>
-<footer><div class=fl><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">+ Save to marks</a><a href="/bookmarklet">Install help</a><a href="/import">Import</a><a href="/export?format=json">Export JSON</a><a href="/export?format=csv">Export CSV</a></div>
-<div class=jobs>${jobsHtml()}</div></footer>
+<footer><div class=fz><h3>Tools</h3><div class=fl><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">+ Save to marks</a><a href="/bookmarklet">Install help</a><a href="/import">Import</a><a href="/export?format=json">Export JSON</a><a href="/export?format=csv">Export CSV</a></div></div>
+<div class=fz><h3>Maintenance</h3><div class=jobs>${jobsHtml()}</div></div>
+<div class="fz about"><h3>About</h3><p>Made by <a href="https://github.com/trippusiltan" rel="noopener noreferrer">@trippusiltan</a></p><p>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom.</p></div></footer>
 <dialog id=palette aria-label="Command palette"><input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
 <script>(()=>{
 const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save'),openBtn=doc.getElementById('open-palette');
@@ -444,7 +456,7 @@ app.get('/', (req, res) => {
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>
-    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a></section></aside></div>`, { q, tag }));
+    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a></section></aside></div>`, { q, tag, cur: 'home' }));
 });
 
 const badUrl = (res, given) => res.status(400).send(page('Bad URL', h`<h2>Couldn't save that</h2>
@@ -555,7 +567,7 @@ app.get('/import', (req, res) => res.send(page('Import', h`<h2>Import bookmarks<
     out.textContent=r.ok?await r.text():'Import failed ('+r.status+').';
     document.getElementById('next').hidden=!r.ok;
   };
-  </script>`)));
+  </script>`, { cur: 'import' })));
 
 app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) => {
   const items = parseNetscape(typeof req.body === 'string' ? req.body : '');
@@ -566,7 +578,7 @@ app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) =>
 app.get('/tags', (req, res) => res.send(page('Tags', h`<h2>Tags</h2><ul>${allTags().map(t => h`<li>
   <a href="/${qs({ tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span>
   <form method=post action="/tags/rename" class=inline><input type=hidden name=from value="${t.tag}"><input type=text name=to placeholder="rename or merge into…"><button>Rename</button></form>
-  <form method=post action="/tags/delete" class=inline onsubmit="return confirm('Remove this tag from all bookmarks?')"><input type=hidden name=tag value="${t.tag}"><button>Delete</button></form></li>`)}</ul>`)));
+  <form method=post action="/tags/delete" class=inline onsubmit="return confirm('Remove this tag from all bookmarks?')"><input type=hidden name=tag value="${t.tag}"><button>Delete</button></form></li>`)}</ul>`, { cur: 'tags' })));
 
 app.post('/tags/rename', (req, res) => {
   const to = parseTags(req.body.to)[0];

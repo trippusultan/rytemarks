@@ -33,13 +33,31 @@ test('chrome: toast, add composer, header, footer', async t => {
     assert.match(html, /<button class=sr>Search<\/button>/);
   });
 
-  await t.test('footer: tools left, maintenance right, no dot separators, quiet buttons', () => {
+  await t.test('footer: three quiet zones (tools, maintenance, about), no dot separators, quiet buttons', () => {
     const footer = /<footer>[\s\S]*<\/footer>/.exec(html)[0];
-    assert.match(footer, /<div class=fl><a class=drag href="javascript:/);
-    assert.match(footer, /<div class=jobs><form method=post action="\/check" class=inline><button>Check links now<\/button><\/form>/);
+    assert.match(footer, /<div class=fz><h3>Tools<\/h3><div class=fl><a class=drag href="javascript:/);
+    assert.match(footer, /<div class=fz><h3>Maintenance<\/h3><div class=jobs><form method=post action="\/check" class=inline><button>Check links now<\/button><\/form>/);
+    assert.match(footer, /<div class="fz about"><h3>About<\/h3><p>Made by <a href="https:\/\/github\.com\/trippusiltan" rel="noopener noreferrer">@trippusiltan<\/a><\/p><p>Built on Node\.js, Express, SQLite, Mozilla Readability, metascraper and jsdom\.<\/p><\/div>/);
     assert.doesNotMatch(footer.replace(/<[^>]+>/g, ''), / · /);
     assert.match(css, /form\.inline button\{[^}]*background:transparent/);
-    assert.match(css, /footer\{[^}]*display:flex[^}]*justify-content:space-between/);
+    assert.match(css, /footer\{[^}]*display:grid[^}]*grid-template-columns:/);
+    assert.ok(css.lastIndexOf('@media(max-width:700px){footer{grid-template-columns:1fr}}') > css.indexOf('footer{max-width:1200px'), 'phone stack comes after the base footer rule');
     assert.match(css, /\.drag\{[^}]*border:1px dashed var\(--line\)/);
+  });
+
+  await t.test('navbar: primary links on the right with the current page marked', async () => {
+    assert.match(html, /<nav aria-label="Primary"><a href="\/" aria-current=page>Bookmarks<\/a><a href="\/tags">Tags<\/a><a href="\/import">Import<\/a><\/nav><\/header>/);
+    assert.match(await s.get('/tags'), /<nav aria-label="Primary"><a href="\/">Bookmarks<\/a><a href="\/tags" aria-current=page>Tags<\/a><a href="\/import">Import<\/a><\/nav>/);
+    assert.match(await s.get('/import'), /<a href="\/import" aria-current=page>Import<\/a>/);
+    const nope = await fetch(s.base + '/nope');
+    const nav404 = /<nav aria-label="Primary">.*?<\/nav>/.exec(await nope.text())[0]; // scoped: the CSS text also contains "aria-current"
+    assert.doesNotMatch(nav404, /aria-current/);
+    assert.match(css, /header nav\{[^}]*display:flex/);
+    assert.match(css, /\.kbd\{[^}]*white-space:nowrap/); // "Ctrl K" must not wrap onto two lines in a narrow field
+    assert.match(css, /header nav a\[aria-current=page\]\{[^}]*box-shadow:inset 0 -2px 0 var\(--acc\)/);
+    assert.ok(css.lastIndexOf('@media(max-width:640px){header nav{order:3;width:100%;overflow-x:auto}}') > css.indexOf('header nav{'), 'second scrollable row on phones');
+    // brand and search share the first phone row, and the (now taller) header scrolls away instead of eating the screen
+    const phone = css.lastIndexOf('@media(max-width:640px){header{position:static}header form{min-width:0}}');
+    assert.ok(phone > css.indexOf('header form{flex:1'), 'phone header override comes after the base form rule');
   });
 });
