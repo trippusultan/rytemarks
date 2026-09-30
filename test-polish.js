@@ -16,7 +16,7 @@ test('polish', async t => {
 
   await t.test('import page has next steps and no stale wording', async () => {
     const html = await s.get('/import');
-    assert.match(html, /<div id=next hidden>/);
+    assert.match(html, /<div id=result class=panel hidden role=status>/);
     assert.match(html, /Archive/);
     assert.doesNotMatch(html, /page text is not fetched/);
   });

@@ -4,7 +4,7 @@ const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 
-process.env.MARKS_DB = path.join(os.tmpdir(), `marks-test-${process.pid}.db`);
+process.env.MARKS_DB = path.join(os.tmpdir(), `marks-test-${process.pid}-${Date.now()}.db`);
 const { app, db, checkLinks, settled } = require('./server');
 
 const para = 'Zanzibarfluff is the unique word in this readable article paragraph, repeated so Readability keeps it. ';
@@ -20,7 +20,7 @@ test('bookmark manager end to end', async t => {
     res.writeHead(404).end();
   }).listen(0, '127.0.0.1');
   const srv = app.listen(0, '127.0.0.1');
-  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); db.close(); });
+  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
   const post = async (p, body, headers = {}) => {

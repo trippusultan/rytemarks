@@ -21,7 +21,7 @@ async function setup(t, routes = {}) {
     res.writeHead(404).end();
   }).listen(0, '127.0.0.1');
   const srv = server.app.listen(0, '127.0.0.1');
-  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); });
+  t.after(() => { site.closeAllConnections(); srv.closeAllConnections(); site.close(); srv.close(); server.db.close(); require('node:fs').rmSync(process.env.MARKS_DB, { force: true }); });
   await Promise.all([new Promise(r => site.once('listening', r)), new Promise(r => srv.once('listening', r))]);
   const base = `http://127.0.0.1:${srv.address().port}`, fake = `http://127.0.0.1:${site.address().port}`;
   const postRaw = (p, body, headers = {}) => fetch(base + p, { method: 'POST', redirect: 'manual', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers } });

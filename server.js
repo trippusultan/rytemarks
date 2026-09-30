@@ -233,7 +233,8 @@ const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/sv
 const CSS = `:root{color-scheme:light dark;--r:8px;--sans:"Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c;--glow:6%;--grain:.05}
 @media(prefers-color-scheme:dark){:root{--bg:#0a1013;--surface:#111a1e;--fg:#e7f0f2;--mut:#8fa2a9;--line:#223037;--acc:#3fe0bd;--on-acc:#03211a;--chip:#19252a;--hover:#152127;--bad:#ff8b6e;--glow:18%;--grain:.06}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);min-height:100dvh;display:flex;flex-direction:column}
+[hidden]{display:none!important}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60rem 38rem at 88% -8%,color-mix(in srgb,var(--acc) var(--glow),transparent),transparent 62%),radial-gradient(44rem 30rem at -8% 22%,color-mix(in srgb,var(--acc) var(--glow),transparent),transparent 58%)}
 body::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;opacity:var(--grain);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 h1{margin:.2rem 0 1rem;font-size:clamp(2.2rem,5vw,3.4rem);font-weight:750;letter-spacing:-.05em;line-height:1;text-wrap:balance}
@@ -243,8 +244,8 @@ a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding:.7rem max(1.25rem,calc((100vw - 1200px)/2));background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line)}
 @media(prefers-reduced-transparency:reduce){header{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
-main{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
-footer{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1.5rem 2rem;align-items:start}footer a{color:inherit}
+main{width:100%;flex:1;max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
+footer{max-width:1200px;width:100%;margin:0 auto;padding:1.5rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1.5rem 2rem;align-items:start}footer a{color:inherit}
 @media(max-width:700px){footer{grid-template-columns:1fr}}
 .fz h3{margin:0 0 .6rem;font-size:13px;color:var(--fg);letter-spacing:-.01em}.fz p{margin:0 0 .35rem}
 .about a{color:var(--acc);font-weight:500}
@@ -353,6 +354,48 @@ form[action$="/delete"] button{background:transparent;color:var(--bad);border-co
 a.tile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));text-decoration:none;transform:translateY(-2px)}
 .tile.bad .big{color:var(--bad)}
 @media(prefers-reduced-transparency:reduce){.card,.side,.toast,#palette{background:var(--surface);backdrop-filter:none;-webkit-backdrop-filter:none}}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem 2rem;margin:.25rem 0 1.5rem}
+.ph h1{margin:0;font-size:clamp(1.9rem,4vw,2.6rem);overflow-wrap:anywhere}
+.lede{margin:.5rem 0 0;max-width:62ch;color:var(--mut)}
+.lede a{color:inherit;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.act{display:flex;align-items:center;gap:.5rem}
+.sg{padding:.25rem .65rem;border:1px solid var(--line);border-radius:var(--r);color:var(--mut);font-size:13px;font-weight:500}
+.sg:hover{color:var(--fg);text-decoration:none}.sg.on{background:var(--chip);color:var(--fg)}
+.tfilter{margin:0 0 1rem}.tfilter input{width:min(22rem,100%)}
+.tagcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;align-items:start}
+.tagcard{display:flex;flex-direction:column;gap:.75rem;padding:1rem;background:color-mix(in srgb,var(--surface) 78%,transparent);border:1px solid var(--line);border-radius:var(--r);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--fg) 8%,transparent);animation:rise .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:calc(var(--i)*30ms)}
+.tagcard .count{display:flex;align-items:baseline;gap:.4rem}.tagcard .count span{color:var(--mut);font-size:13px}
+.tg.lg{align-self:flex-start;padding:.15rem .6rem;font-size:15px}
+summary{cursor:pointer;list-style:none;color:var(--mut);font-size:13px}summary::-webkit-details-marker{display:none}
+summary:hover{color:var(--acc)}details[open]>summary{color:var(--fg)}
+summary::before{content:"›";display:inline-block;width:1em;transition:transform .15s}
+details[open]>summary::before{transform:rotate(90deg)}
+.hint{margin:.4rem 0;color:var(--mut);font-size:12.5px}
+.tedit form{display:grid;gap:.25rem;margin-top:.6rem}.tedit form label{margin:.2rem 0 0}.tedit form button{justify-self:start}
+details.del{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--line)}
+.drop{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;min-height:11rem;padding:1.5rem;text-align:center;background:color-mix(in srgb,var(--surface) 78%,transparent);border:1px dashed var(--line);border-radius:var(--r);cursor:pointer}
+.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--acc)}.drop:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.drop.busy{opacity:.6;pointer-events:none}
+.drop-t{font-weight:650;font-size:1.1rem;letter-spacing:-.02em}.drop-s{color:var(--mut)}
+.panel{margin-top:1rem;padding:1.1rem;background:color-mix(in srgb,var(--surface) 78%,transparent);border:1px solid var(--line);border-radius:var(--r);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--fg) 8%,transparent)}
+.panel h2{margin:0 0 .25rem}
+.stats3{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.75rem;margin:.75rem 0}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem}
+.err{margin-top:1rem;color:var(--bad)}
+.btn{display:inline-block;padding:.5rem .85rem;border-radius:var(--r);background:var(--acc);color:var(--on-acc);font-weight:600}.btn:hover{text-decoration:none;filter:brightness(1.08)}
+.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-weight:500}.ghost:hover{border-color:var(--acc);color:var(--acc);filter:none}
+.howto{margin-top:1.5rem}.howto ul{margin:.6rem 0 0;padding-left:1.1rem;list-style:disc}.howto li{margin:.35rem 0;color:var(--mut)}.howto textarea{width:100%;margin-top:.6rem}
+.steps{counter-reset:s;display:grid;gap:1rem;margin:0 0 1.5rem;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:2rem 1fr;gap:.35rem .9rem;align-items:start}
+.steps li::before{content:counter(s);grid-row:1 / span 2;display:grid;place-items:center;width:2rem;height:2rem;border-radius:var(--r);background:var(--chip);font:600 13px var(--mono)}
+.stepact{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem}
+.dragbtn{display:inline-block;padding:.5rem .9rem;border:1px dashed var(--acc);border-radius:var(--r);color:var(--acc);font-weight:600;cursor:grab}
+.dragbtn:hover{text-decoration:none;background:var(--chip)}
+.edit-layout{display:grid;grid-template-columns:minmax(0,1fr) 20rem;gap:2rem;align-items:start}
+@media(max-width:820px){.edit-layout{grid-template-columns:1fr}}
+.dcard dl{display:grid;gap:.7rem;margin:.8rem 0 0}.dcard dt{color:var(--mut);font-size:12px}.dcard dd{margin:0;overflow-wrap:anywhere}
+.msg{max-width:36rem}.msg-search{display:flex;gap:.5rem;margin:1rem 0}.msg-search input{flex:1}.links{display:flex;gap:1.25rem}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 button,.chip,a,.card{transition:background-color .15s,color .15s,border-color .15s,box-shadow .2s,transform .2s cubic-bezier(.16,1,.3,1)}
 button:active,.chip:active{transform:scale(.98)}
@@ -364,6 +407,10 @@ button:active,.chip:active{transform:scale(.98)}
 const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
 const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+// Shared header block for every sub page: a large tight title, one plain sentence, an optional primary action.
+const pageHead = (title, lede, action) => h`<div class=ph><div><h1>${title}</h1>${lede && h`<p class=lede>${lede}</p>`}</div>${action && h`<div class=act>${action}</div>`}</div>`;
+const messagePage = (res, status, title, body) => res.status(status).send(page(title, h`${pageHead(title)}<div class=msg>${body}<form action="/" role=search class=msg-search><label class=sr for=msg-q>Search your bookmarks</label><input id=msg-q type=search name=q placeholder="Search bookmarks"><button>Search</button></form><p class=links><a href="/">Back to your bookmarks</a><a href="/tags">Tags</a></p></div>`));
 const NAV = [['home', '/', 'Bookmarks'], ['tags', '/tags', 'Tags'], ['import', '/import', 'Import']];
 const navHtml = cur => h`<nav aria-label="Primary">${NAV.map(([k, href, label]) => h`<a href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${label}</a>`)}</nav>`;
 const paletteTags = () => JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c').replace(/'/g, '\\u0027').replace(/&/g, '\\u0026');
@@ -476,9 +523,9 @@ app.get('/', (req, res) => {
     <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a></section></aside></div>`, { q, tag, cur: 'home' }));
 });
 
-const badUrl = (res, given) => res.status(400).send(page('Bad URL', h`<h2>Couldn't save that</h2>
-  ${given ? h`<p>“${String(given).slice(0, 200)}” is not an http(s) web address.</p>`
-    : h`<p>No web address arrived. If you clicked the save bookmark, your browser dropped it: <a href="/bookmarklet">install the newer bookmark</a>, or paste the address on the <a href="/">home page</a>.</p>`}`));
+const badUrl = (res, given) => messagePage(res, 400, "Couldn't save that", given
+  ? h`<p>“${String(given).slice(0, 200)}” is not an http(s) web address.</p>`
+  : h`<p>No web address arrived. If you clicked the save bookmark, your browser dropped it: <a href="/bookmarklet">install the newer bookmark</a>, or paste the address on the <a href="/">home page</a>.</p>`);
 
 app.get('/save', (req, res) => {
   const url = cleanUrl(req.query.url);
@@ -488,15 +535,16 @@ app.get('/save', (req, res) => {
     <script>document.getElementById('f').submit()</script>`));
 });
 
-app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`<h2>Save button</h2>
-  <p>Drag a link to your bookmarks bar (Ctrl+Shift+B shows it), or create a bookmark by hand and paste the code below as its URL. The server must be running when you click.</p>
-  <p>Already have an older save bookmark that says "No web address arrived"? Delete it and install this one.</p>
-  <h3>Standard (opens a new tab)</h3>
-  <p><a href="${raw(esc(BOOKMARKLET))}">Save to marks</a></p>
-  <textarea readonly rows=6 style="width:100%" onclick="this.select()">${BOOKMARKLET}</textarea>
-  <h3>Fallback (same tab; use it when the standard one is blocked)</h3>
-  <p><a href="${raw(esc(BOOKMARKLET_GET))}">Save to marks (simple)</a></p>
-  <textarea readonly rows=3 style="width:100%" onclick="this.select()">${BOOKMARKLET_GET}</textarea>`)));
+app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`${pageHead('Save button', 'One click on any page saves it to marks. The server must be running when you click.')}
+<ol class=steps><li><b>Show your bookmarks bar.</b> Press Ctrl+Shift+B (Cmd+Shift+B on a Mac) in Chrome, Edge or Firefox.</li>
+<li><b>Drag this button onto the bar.</b><span class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a><button type=button class=ghost data-copy=code-std>Copy code</button></span></li>
+<li><b>Click it on any page.</b> A new tab opens on the edit screen: add tags and press Save.</li></ol>
+<details class=howto><summary>Show the code</summary><textarea id=code-std readonly rows=6 onclick="this.select()">${BOOKMARKLET}</textarea></details>
+<h3>If the button is blocked</h3><p class=meta>Some sites block pop-ups. This variant works in the same tab; drag it the same way.</p>
+<p class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET_GET))}">+ Save to marks (simple)</a><button type=button class=ghost data-copy=code-get>Copy code</button></p>
+<details class=howto><summary>Show the simple code</summary><textarea id=code-get readonly rows=3 onclick="this.select()">${BOOKMARKLET_GET}</textarea></details>
+<p class=meta>Have an older save bookmark that says "No web address arrived"? Delete it and install this one.</p>
+<script>document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{const ta=document.getElementById(b.dataset.copy);try{await navigator.clipboard.writeText(ta.value)}catch(e){const d=ta.closest('details');if(d)d.open=true;ta.select();document.execCommand('copy')}const t=b.textContent;b.textContent='Copied';setTimeout(()=>{b.textContent=t},1600)}))</script>`)));
 
 app.post('/save', (req, res) => {
   const url = cleanUrl(req.body?.url);
@@ -509,10 +557,13 @@ app.post('/save', (req, res) => {
 
 app.get('/b/:id', (req, res) => {
   const b = withTags(db.prepare(`${SELECT} WHERE b.id=?`).get(+req.params.id));
-  if (!b) return res.status(404).send(page('Not found', h`<p>No such bookmark.</p>`));
+  if (!b) return messagePage(res, 404, 'Bookmark not found', h`<p class=meta>That bookmark does not exist, or it was deleted.</p>`);
   const tags = JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c');
   const back = safeBack(req.query.back);
-  res.send(page(b.title || b.url, h`<h2><a href="${b.url}">${b.title || b.url}</a></h2><p class=meta>${b.url}</p>
+  const st = b.status;
+  const check = st == null ? 'Not checked yet' : h`<span class="badge${isDead(st) ? ' bad' : ''}">HTTP ${st}</span>`;
+  res.send(page(b.title || b.url, h`${pageHead(b.title || b.url, h`<a href="${b.url}" rel="noopener noreferrer">${b.url}</a>`)}
+    <div class=edit-layout><div class=col-main>
     ${req.query.new && h`<p class=flash role=status>Saved ✓ ${!b.archived_at && 'Fetching the page in the background: add tags now.'}</p>`}
     ${req.query.dup && h`<p class=flash role=status>Already saved: edit it below.</p>`}
     <form class=edit method=post action="/b/${b.id}">${req.query.new && h`<input type=hidden name=done value=1>`}<input type=hidden name=back value="${back}">
@@ -521,7 +572,9 @@ app.get('/b/:id', (req, res) => {
     <div class=chips>${allTags().slice(0, 12).map(t => h`<button type=button class=chip data-t="${t.tag}">#${t.tag}</button>`)}</div>
     <label for=note>Note</label><textarea id=note name=note rows=5>${b.note}</textarea>
     <p><button>Save</button> <a href="${back}">Cancel</a></p></form>
-    <form method=post action="/b/${b.id}/delete"><input type=hidden name=back value="${back}"><button>Delete</button></form>
+    <form method=post action="/b/${b.id}/delete"><input type=hidden name=back value="${back}"><button>Delete</button></form></div>
+    <aside class="side dcard" aria-label="Bookmark details"><div class=top><img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}"><span class=dom>${domain(b.url)}</span></div>
+    <dl><dt>Description</dt><dd>${b.description || 'None captured yet'}</dd><dt>Saved</dt><dd>${ago(b.saved_at)} <span class=meta>(${date(b.saved_at)})</span></dd><dt>Last check</dt><dd>${check}</dd><dt>Page text</dt><dd>${b.text ? 'Archived' : b.archived_at ? 'Nothing readable found' : 'Not archived yet'}</dd></dl></aside></div>
     <script>
     // Native datalist, but options are rebuilt for the tag after the last comma.
     const T=${raw(tags)},inp=document.getElementById('tags'),dl=document.getElementById('tl');
@@ -573,33 +626,82 @@ app.post('/undo', (req, res) => {
   res.redirect(303, '/?ok=restored');
 });
 
-app.get('/import', (req, res) => res.send(page('Import', h`<h2>Import bookmarks</h2>
-  <p>Netscape bookmarks HTML export (Raindrop, Chrome, Firefox, …). Existing URLs are skipped. Page text can be fetched afterwards with the Archive button.</p>
-  <input type=file id=f accept=".html,.htm"><p id=out></p>
-  <div id=next hidden><a href="/">View bookmarks</a> · <form method=post action="/archive" class=inline><button>Archive pages now</button></form></div>
-  <script>
-  document.getElementById('f').onchange=async e=>{
-    const out=document.getElementById('out');out.textContent='Importing…';
-    const r=await fetch('/import',{method:'POST',headers:{'content-type':'text/plain'},body:e.target.files[0]});
-    out.textContent=r.ok?await r.text():'Import failed ('+r.status+').';
-    document.getElementById('next').hidden=!r.ok;
-  };
-  </script>`, { cur: 'import' })));
+app.get('/import', (req, res) => res.send(page('Import', h`${pageHead('Import bookmarks', 'Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop. Links you already have are skipped, and nothing is written until you confirm.')}
+<div class=import>
+<label class=drop id=drop for=f><input type=file id=f accept=".html,.htm"><span class=drop-t>Drop your bookmarks file here</span><span class=drop-s>or choose a file (.html)</span></label>
+<p id=err class=err role=alert hidden></p>
+<div id=preview class=panel hidden aria-live=polite><h2>Ready to import</h2><p class=meta>File: <b id=p-file></b></p><div class=stats3><div class=tile><b class=big id=p-new>0</b><span>new</span></div><div class=tile><b class=big id=p-dupe>0</b><span>already saved</span></div><div class=tile><b class=big id=p-tags>0</b><span>tags found</span></div></div><p id=p-none class=meta hidden>Everything in this file is already in your library.</p><div class=row><button id=go type=button>Import</button><button id=again type=button class=ghost>Choose another file</button></div></div>
+<div id=result class=panel hidden role=status><h2>Imported</h2><div class=stats3><div class=tile><b class=big id=r-added>0</b><span>added</span></div><div class=tile><b class=big id=r-skipped>0</b><span>skipped, already saved</span></div></div><p class=meta>Page text isn't fetched during import. Archive the pages in the background to make imported bookmarks searchable by their content.</p><div class=row><a class=btn href="/">View bookmarks</a><form method=post action="/archive" class=inline><button>Archive pages now</button></form></div></div>
+<details class=howto><summary>How do I export my bookmarks?</summary><ul><li><b>Chrome:</b> open chrome://bookmarks, use the menu at the top right, then Export bookmarks.</li><li><b>Firefox:</b> press Ctrl+Shift+O, then Import and Backup, then Export Bookmarks to HTML.</li><li><b>Safari:</b> File, then Export, then Bookmarks.</li><li><b>Raindrop.io:</b> open Settings, choose Import and Export, then export as HTML.</li></ul></details>
+</div>
+<script>(()=>{
+const $=id=>document.getElementById(id),f=$('f'),drop=$('drop'),prev=$('preview'),res=$('result'),err=$('err'),go=$('go');
+let file=null;
+const fail=m=>{err.textContent=m;err.hidden=false;prev.hidden=true;res.hidden=true};
+const take=async x=>{
+  file=x;err.hidden=true;res.hidden=true;drop.classList.add('busy');drop.setAttribute('aria-busy','true');
+  try{
+    const r=await fetch('/import?dry=1',{method:'POST',headers:{'content-type':'text/plain'},body:x});
+    if(!r.ok)throw new Error('bad status');
+    const d=await r.json();
+    if(!d.total)return fail("That doesn't look like a bookmarks export: no web links were found.");
+    $('p-file').textContent=x.name;$('p-new').textContent=d.fresh;$('p-dupe').textContent=d.dupes;$('p-tags').textContent=d.tags;
+    go.disabled=d.fresh===0;go.textContent=d.fresh?'Import '+d.fresh+' bookmarks':'Nothing new to import';$('p-none').hidden=d.fresh!==0;prev.hidden=false;
+  }catch(e){fail('Could not read that file. Choose an HTML bookmarks export.')}
+  finally{drop.classList.remove('busy');drop.removeAttribute('aria-busy')}
+};
+f.addEventListener('change',()=>{if(f.files[0])take(f.files[0])});
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,()=>drop.classList.add('over')));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,()=>drop.classList.remove('over')));
+go.addEventListener('click',async()=>{
+  go.disabled=true;go.textContent='Importing…';
+  try{
+    const r=await fetch('/import',{method:'POST',headers:{'content-type':'text/plain'},body:file});
+    if(!r.ok)throw new Error('bad status');
+    const m=/Imported (\\d+) new of (\\d+)/.exec(await r.text());
+    $('r-added').textContent=m[1];$('r-skipped').textContent=m[2]-m[1];prev.hidden=true;res.hidden=false;
+  }catch(e){fail('The import failed and nothing was changed. Try again.')}
+});
+$('again').addEventListener('click',()=>{f.value='';prev.hidden=true;res.hidden=true;f.click()});
+})()</script>`, { cur: 'import' })));
+
+// Dry run: what an import would do, without writing anything. Repeats inside the file count as already saved.
+const dryRun = items => {
+  const urls = [...new Set(items.map(i => i.url))], have = new Set();
+  for (let i = 0; i < urls.length; i += 500) {
+    const chunk = urls.slice(i, i + 500);
+    for (const r of db.prepare(`SELECT url FROM bookmarks WHERE url IN (${chunk.map(() => '?').join(',')})`).all(...chunk)) have.add(r.url);
+  }
+  const seen = new Set(), tags = new Set();
+  for (const it of items) { if (seen.has(it.url) || have.has(it.url)) continue; seen.add(it.url); it.tags.forEach(t => tags.add(t)); }
+  return { total: items.length, fresh: seen.size, dupes: items.length - seen.size, tags: tags.size };
+};
 
 app.post('/import', express.text({ type: '*/*', limit: '200mb' }), (req, res) => {
   const items = parseNetscape(typeof req.body === 'string' ? req.body : '');
+  if (req.query.dry === '1') return res.json(dryRun(items));
   const added = importAll(items);
   res.type('text').send(`Imported ${added} new of ${items.length} http(s) links.`);
 });
 
-app.get('/tags', (req, res) => res.send(page('Tags', h`<h2>Tags</h2><ul>${allTags().map(t => h`<li>
-  <a href="/${qs({ tag: t.tag })}">#${t.tag}</a> <span class=meta>${t.n}</span>
-  <form method=post action="/tags/rename" class=inline><input type=hidden name=from value="${t.tag}"><input type=text name=to placeholder="rename or merge into…"><button>Rename</button></form>
-  <form method=post action="/tags/delete" class=inline onsubmit="return confirm('Remove this tag from all bookmarks?')"><input type=hidden name=tag value="${t.tag}"><button>Delete</button></form></li>`)}</ul>`, { cur: 'tags' })));
+app.get('/tags', (req, res) => {
+  const sort = req.query.sort === 'az' ? 'az' : 'used';
+  const list = allTags();
+  if (sort === 'az') list.sort((a, b) => a.tag.localeCompare(b.tag));
+  const saved = db.prepare('SELECT count(*) n FROM bookmarks').get().n;
+  const sg = (k, href, label) => h`<a class="sg${sort === k ? ' on' : ''}" href="${href}"${sort === k ? raw(' aria-current=true') : ''}>${label}</a>`;
+  if (!list.length) return res.send(page('Tags', h`${pageHead('Tags', 'Nothing tagged yet.')}<div class=empty><h3>No tags yet</h3><p>Tags appear when you add them to a bookmark. Open any bookmark, type a tag (separate several with commas) and press Save.</p><a href="/">Back to your bookmarks</a></div>`, { cur: 'tags' }));
+  res.send(page('Tags', h`${pageHead('Tags', `${plural(list.length, 'tag')} across ${plural(saved, 'bookmark')}. Rename a tag onto another to merge them; delete removes it from every bookmark.`, h`<div class=seg role=group aria-label="Sort tags">${sg('used', '/tags', 'Most used')}${sg('az', '/tags?sort=az', 'A to Z')}</div>`)}
+<div class=tfilter><label class=sr for=tag-filter>Filter tags</label><input id=tag-filter type=search placeholder="Filter tags" autocomplete=off></div>
+<ul class=tagcards>${list.map((t, i) => h`<li class=tagcard style="--i:${Math.min(i, 14)}" data-name="${t.tag}"><a class="tg lg" href="/${qs({ tag: t.tag })}">#${t.tag}</a><div class=count><b class=big>${t.n}</b><span>${t.n === 1 ? 'bookmark' : 'bookmarks'}</span></div><details class=tedit><summary>Edit</summary><form method=post action="/tags/rename"><input type=hidden name=from value="${t.tag}"><label for=rn-${i}>New name</label><input id=rn-${i} type=text name=to value="${t.tag}" autocomplete=off><p class=hint>Renaming onto an existing tag merges them. #${t.tag} is on ${plural(t.n, 'bookmark')}.</p><button>Rename</button></form><details class=del><summary>Delete tag</summary><p class=hint>Removes #${t.tag} from ${plural(t.n, 'bookmark')}. The bookmarks themselves stay.</p><form method=post action="/tags/delete"><input type=hidden name=tag value="${t.tag}"><button>Remove from ${plural(t.n, 'bookmark')}</button></form></details></details></li>`)}</ul>
+<p id=tag-none class=meta hidden>No tags match that filter.</p>
+<script>(()=>{const q=document.getElementById('tag-filter'),cards=[...document.querySelectorAll('.tagcard')],none=document.getElementById('tag-none');
+q.addEventListener('input',()=>{const v=q.value.trim().toLowerCase().replace(/^#/,'');let n=0;cards.forEach(c=>{const ok=!v||c.dataset.name.includes(v);c.hidden=!ok;if(ok)n++});none.hidden=n>0})})()</script>`, { cur: 'tags' }));
+});
 
 app.post('/tags/rename', (req, res) => {
   const to = parseTags(req.body.to)[0];
-  if (!to) return res.status(400).send(page('Bad tag', h`<p>Give the new tag name.</p>`));
+  if (!to) return messagePage(res, 400, 'Bad tag', h`<p>Give the new tag name.</p>`);
   renameTag(String(req.body.from), to);
   res.redirect(303, '/tags');
 });
@@ -628,8 +730,7 @@ app.get('/export', (req, res) => {
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
 
-app.use((req, res) => res.status(404).send(page('Page not found', h`<h2>Page not found</h2>
-  <p class=meta>Nothing lives at ${req.path}.</p><p><a href="/">Back to your bookmarks</a></p>`)));
+app.use((req, res) => messagePage(res, 404, 'Page not found', h`<p class=meta>Nothing lives at ${req.path}.</p>`));
 
 module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo, safeBack };
 
