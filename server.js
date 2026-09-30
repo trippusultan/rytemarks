@@ -87,12 +87,17 @@ const insertBm = db.prepare(`INSERT OR IGNORE INTO bookmarks(url,title,descripti
   VALUES(@url,@title,@description,@image,@favicon,@note,@text,@saved_at,@status,@checked_at,@archived_at)`);
 // Save answers immediately; the page fetch fills in details afterwards. A title the user already typed is kept,
 // and no HTTP status (network failure) leaves archived_at NULL so the Archive button can retry it.
+// Every write is keyed on id AND url (ids are reused after a delete) and never blanks something already stored.
 const enrichStmt = db.prepare(`UPDATE bookmarks SET
   title = CASE WHEN title = '' THEN coalesce(nullif(?, ''), ?) ELSE title END,
-  description = ?, image = ?, favicon = ?, text = ?, status = ?, checked_at = ?, archived_at = ? WHERE id = ?`);
+  description = coalesce(nullif(?, ''), description), image = coalesce(nullif(?, ''), image),
+  favicon = coalesce(nullif(?, ''), favicon), text = coalesce(nullif(?, ''), text),
+  status = ?, checked_at = ?, archived_at = ? WHERE id = ? AND url = ?`);
+const placeholderTitle = db.prepare("UPDATE bookmarks SET title = ? WHERE id = ? AND url = ? AND title = ''");
 async function enrich(id, url) {
   const m = await scrape(url);
-  enrichStmt.run(m.title, domain(url), m.description, m.image, m.favicon, m.text, m.status, m.status && now(), m.status && now(), id);
+  if (m.status == null) return void placeholderTitle.run(domain(url), id, url); // network failure: change nothing else
+  enrichStmt.run(m.title, domain(url), m.description, m.image, m.favicon, m.text, m.status, now(), now(), id, url);
 }
 const inflight = new Set();
 const enrichInBackground = (id, url) => {
@@ -109,7 +114,7 @@ const renameTag = db.transaction((from, to) => {
   db.prepare('UPDATE OR IGNORE bookmark_tags SET tag = ? WHERE tag = ?').run(to, from);
   db.prepare('DELETE FROM bookmark_tags WHERE tag = ?').run(from); // rows that already had `to`
 });
-const FLASH = { deleted: 'Bookmark deleted.', restored: 'Bookmark restored.', saved: 'Saved.' };
+const FLASH = { deleted: 'Bookmark deleted.', restored: 'Bookmark restored.', saved: 'Saved.', exists: 'That page was saved again, so there was nothing to restore.' };
 const UNDO_MS = 5 * 60 * 1000;
 const undo = { item: null }; // ponytail: one level, in memory, lost on restart; add a deleted_at column for more
 const restoreStmt = db.prepare(`INSERT OR IGNORE INTO bookmarks(id,url,title,description,image,favicon,note,text,saved_at,status,checked_at,archived_at)
@@ -139,12 +144,13 @@ async function checkLinks() {
 async function archiveMissing() {
   const upd = db.prepare(`UPDATE bookmarks SET text = ?, description = coalesce(nullif(?, ''), description),
     image = coalesce(nullif(?, ''), image), favicon = coalesce(nullif(?, ''), favicon),
-    status = coalesce(?, status), checked_at = coalesce(?, checked_at), archived_at = ? WHERE id = ?`);
+    status = coalesce(?, status), checked_at = coalesce(?, checked_at), archived_at = ?
+    WHERE id = ? AND url = ? AND archived_at IS NULL AND text = ''`); // still pending: never overwrite a concurrent save's result
   let n = 0;
   for (const { id, url } of db.prepare("SELECT id, url FROM bookmarks WHERE archived_at IS NULL AND text = ''").all()) {
     const m = await scrape(url);
-    upd.run(m.text, m.description, m.image, m.favicon, m.status, m.status && now(), m.status && now(), id); // no HTTP status = network failure: leave pending for a retry
-    if (m.text) n++;
+    const r = upd.run(m.text, m.description, m.image, m.favicon, m.status, m.status && now(), m.status && now(), id, url); // no HTTP status = network failure: leave pending for a retry
+    if (r.changes && m.text) n++;
   }
   return n;
 }
@@ -197,8 +203,14 @@ const ago = (t, at = now()) => {
   if (s < 7 * 86400) return `${Math.floor(s / 86400)}d ago`;
   return date(t);
 };
-// Only local paths: a lone leading "/" (not "//" or "/\", which browsers treat as another host).
-const safeBack = s => (/^\/(?![\/\\])/.test(String(s || '')) ? String(s) : '/');
+// Only local paths. Judged after the URL parser has normalised it (dot segments, tabs/newlines, backslashes,
+// %2e), the same way the browser and withOk() will, so "/.//evil.test" cannot slip through as "//evil.test".
+const safeBack = s => {
+  try {
+    const u = new URL(String(s || '/'), 'http://x');
+    return u.host === 'x' && !u.pathname.startsWith('//') ? u.pathname + u.search : '/';
+  } catch { return '/'; }
+};
 
 const BOOKMARKLET = `javascript:(function(){var f=document.createElement('form');f.method='POST';f.action='http://localhost:${PORT}/save';f.target='_blank';var i=document.createElement('input');i.type='hidden';i.name='url';i.value=location.href;f.appendChild(i);document.body.appendChild(f);f.submit();f.remove()})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
@@ -377,11 +389,12 @@ app.post('/b/:id/delete', (req, res) => {
 app.post('/undo', (req, res) => {
   const u = undo.item;
   undo.item = null;
-  if (u && Date.now() - u.at < UNDO_MS && restoreStmt.run(u.b).changes) {
-    setTags(u.b.id, u.b.tags);
-    return res.redirect(303, '/?ok=restored');
-  }
-  res.redirect(303, '/');
+  if (!u || Date.now() - u.at >= UNDO_MS) return res.redirect(303, '/');
+  if (db.prepare('SELECT 1 FROM bookmarks WHERE url = ?').get(u.b.url)) return res.redirect(303, withOk('/', 'exists'));
+  const idTaken = db.prepare('SELECT 1 FROM bookmarks WHERE id = ?').get(u.b.id); // ids are reused after deletes
+  const r = restoreStmt.run({ ...u.b, id: idTaken ? null : u.b.id });
+  setTags(r.lastInsertRowid, u.b.tags);
+  res.redirect(303, '/?ok=restored');
 });
 
 app.get('/import', (req, res) => res.send(page('Import', h`<h2>Import bookmarks</h2>
@@ -439,7 +452,7 @@ app.get('/export', (req, res) => {
   } else res.attachment(`marks-${stamp}.json`).type('json').send(JSON.stringify(rows, null, 2));
 });
 
-module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo };
+module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo, safeBack };
 
 if (require.main === module) {
   app.listen(PORT, '127.0.0.1', () => console.log(`marks: http://localhost:${PORT}  db: ${db.name}`));

@@ -42,7 +42,20 @@ test('friendlier list', async t => {
   await t.test('back is honoured only for local paths', async () => {
     const loc = async back => (await s.post('/b/1', new URLSearchParams({ title: '', tags: 'a', note: '', back }))).headers.get('location');
     assert.match(await loc('/?tag=a'), /^\/\?tag=a(&ok=saved)?$/); // Task 4 appends ok=saved
-    for (const bad of ['//evil.test', '/\\evil.test', 'https://evil.test', 'javascript:alert(1)', '']) assert.match(await loc(bad), /^\/(\?ok=saved)?$/, bad);
+    const bads = ['//evil.test', '/\\evil.test', 'https://evil.test', 'javascript:alert(1)', '',
+      '/.//evil.test', '/..//evil.test', '/%2e//evil.test', '/%2E/%2e//evil.test', '/\t/evil.test', '/\n/evil.test', '/\r/evil.test', '/\t\t/evil.test'];
+    for (const bad of bads) assert.match(await loc(bad), /^\/(\?ok=saved)?$/, bad);
+  });
+
+  await t.test('safeBack normalises like the browser will, and keeps good paths', () => {
+    const { safeBack } = require('./server');
+    for (const good of ['/', '/?tag=a', '/?q=x&page=2', '/tags']) assert.equal(safeBack(good), good);
+    for (const bad of ['/.//evil.test', '/\t/evil.test', '//evil.test', 'http://evil.test/']) assert.equal(safeBack(bad), '/', bad);
+  });
+
+  await t.test('a hostile back cannot reach the Cancel link', async () => {
+    const html = await s.get('/b/1?back=%2F%09%2Fevil.test');
+    assert.match(html, /<a href="\/">Cancel<\/a>/);
   });
 
   await t.test('"/" focuses search unless you are typing in a field', async () => {

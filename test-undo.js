@@ -36,6 +36,30 @@ test('undo delete and flash messages', async t => {
     assert.equal(count(), 0);
   });
 
+  await t.test('undo still works when the id was taken meanwhile', async () => {
+    await s.post('/save', new URLSearchParams({ url: s.fake + '/article' }));
+    await s.post('/b/1', new URLSearchParams({ title: '', tags: 'keep', note: 'orig' }));
+    await del();
+    await s.post('/save', new URLSearchParams({ url: s.fake + '/plain' })); // reuses id 1
+    assert.equal(count(), 1);
+    assert.equal((await s.post('/undo', '')).headers.get('location'), '/?ok=restored');
+    assert.equal(count(), 2);
+    const b = s.db.prepare('SELECT * FROM bookmarks WHERE url = ?').get(s.fake + '/article');
+    assert.equal(b.note, 'orig');
+    assert.deepEqual(s.db.prepare('SELECT tag FROM bookmark_tags WHERE bookmark_id = ?').all(b.id).map(r => r.tag), ['keep']);
+  });
+
+  await t.test('undo says so when the page was saved again', async () => {
+    s.db.prepare('DELETE FROM bookmarks').run();
+    await s.post('/save', new URLSearchParams({ url: s.fake + '/article' }));
+    const id = s.db.prepare('SELECT id FROM bookmarks').get().id;
+    await s.post(`/b/${id}/delete`, new URLSearchParams({}));
+    await s.post('/save', new URLSearchParams({ url: s.fake + '/article' }));
+    assert.equal((await s.post('/undo', '')).headers.get('location'), '/?ok=exists');
+    assert.equal(count(), 1);
+    assert.match(await s.get('/?ok=exists'), /saved again/);
+  });
+
   await t.test('flash keys are whitelisted', async () => {
     for (const k of ['__proto__', 'constructor', '<script>alert(1)</script>']) {
       const html = await s.get(`/?ok=${encodeURIComponent(k)}`);
