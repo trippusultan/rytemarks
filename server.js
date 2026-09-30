@@ -53,13 +53,18 @@ const ftsQuery = q => (String(q).match(/[\p{L}\p{N}_]+/gu) || []).map(t => `"${t
 const silent = () => ({ virtualConsole: new VirtualConsole() });
 
 // ---------- scraping ----------
+function decodeHtml(buf, contentType) {
+  const label = /charset=["']?([\w-]+)/i.exec(contentType || '')?.[1]
+    || /<meta[^>]+charset=["']?([\w-]+)/i.exec(buf.subarray(0, 2048).toString('latin1'))?.[1] || 'utf-8';
+  try { return new TextDecoder(label).decode(buf); } catch { return buf.toString('utf8'); }
+}
 async function scrape(url) {
   const out = { title: '', description: '', image: '', favicon: '', text: '', status: null };
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000), headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml' } });
     out.status = res.status;
     if (!/html/.test(res.headers.get('content-type') || '')) return out;
-    const html = await res.text();
+    const html = decodeHtml(Buffer.from(await res.arrayBuffer()), res.headers.get('content-type'));
     const meta = await metascraper({ html, url: res.url });
     const dom = new JSDOM(html, { url: res.url, ...silent() });
     const icon = dom.window.document.querySelector('link[rel~="icon" i]')?.getAttribute('href');
