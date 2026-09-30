@@ -40,13 +40,13 @@ Import takes a browser bookmarks export (`.html`) or rytemarks' own JSON export.
 
 ## Cleaning up duplicates
 
-URLs are normalised when you save or import: tracking parameters (`utm_*`, `fbclid`, `gclid` and friends), empty `#fragments` and trailing slashes are dropped, so the same page saved twice is one bookmark (single-page-app `#/route` fragments are kept). For bookmarks saved before that, `npm run dedupe` shows what would merge (a dry run); `npm run dedupe -- --apply` first writes `backups/marks-before-dedupe-<time>.db`, then merges each group into its oldest bookmark (notes joined, tags combined, longest page text kept).
+URLs are normalised when you save or import: tracking parameters (`utm_*`, `fbclid`, `gclid` and friends), a bare `#` and trailing slashes are dropped, so the same page saved twice is one bookmark. A `#fragment` is part of the page and is always kept (Mega and Excalidraw keep their key there, Gmail its thread id). For bookmarks saved before that, `npm run dedupe` shows what would merge (a dry run); `npm run dedupe -- --apply` first writes `backups/marks-before-dedupe-<time>.db`, then merges each group into its oldest bookmark (notes joined, tags combined, longest page text kept).
 
 ## Backups and auto-start
 
 `npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run rytemarks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
 
-The server also writes a dated backup to `backups/` at start-up (if today's is missing) and every day at 02:15 while it runs, keeping the newest 14 (other files in that folder are never touched). The home page Status panel shows the date of the last one. To restore, stop the server and copy a `marks-YYYY-MM-DD.db` over `marks.db`.
+The server also writes a dated backup to `backups/` (named for the local calendar day) at start-up if today's is missing and every day at 02:15 while it runs, keeping the newest 14 (other files in that folder are never touched). `npm run backup` uses the same crash-safe write and the same name, so it counts as today's backup. The home page Status panel shows the date of the last one. To restore, stop the server and copy a `marks-YYYY-MM-DD.db` over `marks.db`.
 
 ## Brand
 

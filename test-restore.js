@@ -37,6 +37,25 @@ test('restore from JSON and folders as tags', async t => {
     assert.deepEqual(by['https://other.test/'], []);
   });
 
+  await t.test('Edge and localised browsers: the toolbar / unfiled root folders are flagged by attribute, never turned into tags', () => {
+    const EDGE = `<!DOCTYPE NETSCAPE-Bookmark-file-1><DL><p>
+      <DT><H3 ADD_DATE="1" PERSONAL_TOOLBAR_FOLDER="true">Favorites bar</H3>
+      <DL><p>
+        <DT><A HREF="https://e1.test/">E1</A>
+        <DT><H3>Reading</H3><DL><p><DT><A HREF="https://e2.test/">E2</A></DL><p>
+      </DL><p>
+      <DT><H3 ADD_DATE="1" UNFILED_BOOKMARKS_FOLDER="true">Other favorites</H3>
+      <DL><p><DT><A HREF="https://e3.test/">E3</A></DL><p>
+      <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">Barre de favoris</H3>
+      <DL><p><DT><A HREF="https://e4.test/">E4</A></DL><p>
+    </DL><p>`;
+    const by = Object.fromEntries(s.parseImport(EDGE).map(i => [i.url, i.tags]));
+    assert.deepEqual(by['https://e1.test/'], []);
+    assert.deepEqual(by['https://e2.test/'], ['reading']);
+    assert.deepEqual(by['https://e3.test/'], []);
+    assert.deepEqual(by['https://e4.test/'], [], 'a translated toolbar name is still the toolbar');
+  });
+
   await t.test('dry run counts folder tags', async () => {
     const r = await (await imp(CHROME, '?dry=1')).json();
     assert.deepEqual(r, { total: 5, fresh: 5, dupes: 0, tags: 3 });

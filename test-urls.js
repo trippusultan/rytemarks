@@ -7,9 +7,15 @@ const { plan, apply } = require('./dedupe');
 test('url normalisation and duplicate merge', async t => {
   const s = await setup(t);
 
-  await t.test('normalizeUrl strips tracking, empty fragments and trailing slashes, and nothing else', () => {
+  await t.test('normalizeUrl strips tracking params, an empty # and trailing slashes, and nothing else (fragments are part of the page)', () => {
     const cases = [
-      ['https://a.test/x/?utm_source=tw&id=3#top', 'https://a.test/x?id=3'],
+      ['https://a.test/x/?utm_source=tw&id=3#top', 'https://a.test/x?id=3#top'],
+      ['https://a.test/x#', 'https://a.test/x'],                      // an empty fragment means nothing
+      ['https://mega.nz/file/AbCd#decryptionKey123', 'https://mega.nz/file/AbCd#decryptionKey123'], // the key lives in the fragment
+      ['https://excalidraw.com/#json=abc,KEY', 'https://excalidraw.com/#json=abc,KEY'],
+      ['https://mail.google.com/mail/u/0/#inbox/FMfc1', 'https://mail.google.com/mail/u/0#inbox/FMfc1'],  // two threads stay two bookmarks
+      ['https://mail.google.com/mail/u/0/#inbox/OTHER', 'https://mail.google.com/mail/u/0#inbox/OTHER'],
+      ['https://github.com/o/r/blob/main/f.js#L10-L20', 'https://github.com/o/r/blob/main/f.js#L10-L20'],
       ['https://a.test/?fbclid=abc', 'https://a.test/'],
       ['https://a.test', 'https://a.test/'],                       // root path keeps its slash
       ['https://a.test/app#/route/1', 'https://a.test/app#/route/1'], // SPA route fragments are real pages
@@ -24,7 +30,7 @@ test('url normalisation and duplicate merge', async t => {
   });
 
   await t.test('saving the same page with different tracking params is one bookmark', async () => {
-    const a = await s.post('/save', new URLSearchParams({ url: s.fake + '/article?utm_source=x#frag' }));
+    const a = await s.post('/save', new URLSearchParams({ url: s.fake + '/article?utm_source=x' }));
     assert.match(a.headers.get('location'), /\?new=1$/);
     const b = await s.post('/save', new URLSearchParams({ url: s.fake + '/article/?fbclid=9' }));
     assert.match(b.headers.get('location'), /\?dup=1$/);
@@ -33,7 +39,7 @@ test('url normalisation and duplicate merge', async t => {
   });
 
   await t.test('import normalises too, so repeats inside a file count as already saved', () => {
-    const items = s.parseNetscape('<DL><DT><A HREF="https://x.test/p?utm_campaign=1">One</A><DT><A HREF="https://x.test/p/#top">Again</A></DL>');
+    const items = s.parseNetscape('<DL><DT><A HREF="https://x.test/p?utm_campaign=1">One</A><DT><A HREF="https://x.test/p/">Again</A></DL>');
     assert.deepEqual(items.map(i => i.url), ['https://x.test/p', 'https://x.test/p']);
   });
 
@@ -43,19 +49,22 @@ test('url normalisation and duplicate merge', async t => {
     const tag = s.db.prepare('INSERT INTO bookmark_tags VALUES (?,?)');
     ins.run('https://a.test/x?utm_source=1', 'First', 'n1', '', 1);       // id 1, oldest: kept
     ins.run('https://a.test/x/', 'Second', 'n2', 'the longer archived text', 2); // id 2
-    ins.run('https://a.test/x#frag', '', 'n1', '', 3);                     // id 3, same note as id 1
+    ins.run('https://a.test/x?fbclid=2', '', 'n1', '', 3);                 // id 3, same note as id 1
     ins.run('https://b.test/?fbclid=1', 'Tidy only', '', '', 4);           // id 4, no duplicate, url just tidied
     ins.run('https://c.test/untouched', 'C', '', '', 5);
+    ins.run('https://g.test/mail#inbox/A', 'Thread A', '', '', 6);         // ids 6, 7: different fragments are different pages, left alone
+    ins.run('https://g.test/mail#inbox/B', 'Thread B', '', '', 7);
     tag.run(1, 't1'); tag.run(2, 't2'); tag.run(2, 't1'); tag.run(3, 't3');
     const p = plan(s.db);
     assert.deepEqual(p.map(x => [x.url, x.keep, x.drop, x.rename]), [
       ['https://a.test/x', 1, [2, 3], true],
       ['https://b.test/', 4, [], true],
     ]);
-    assert.equal(s.db.prepare('SELECT count(*) n FROM bookmarks').get().n, 5, 'plan() writes nothing');
+    assert.equal(s.db.prepare('SELECT count(*) n FROM bookmarks').get().n, 7, 'plan() writes nothing');
     assert.equal(apply(s.db), 2);
     const rows = s.db.prepare('SELECT id,url,title,note,text FROM bookmarks ORDER BY id').all();
-    assert.deepEqual(rows.map(r => r.id), [1, 4, 5]);
+    assert.deepEqual(rows.map(r => r.id), [1, 4, 5, 6, 7]);
+    assert.deepEqual(rows.slice(3).map(r => r.url), ['https://g.test/mail#inbox/A', 'https://g.test/mail#inbox/B'], 'fragment pages are never merged');
     assert.equal(rows[0].url, 'https://a.test/x');
     assert.equal(rows[0].title, 'First');
     assert.equal(rows[0].note, 'n1\n\nn2');                 // distinct notes joined, repeated note kept once

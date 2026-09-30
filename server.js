@@ -195,14 +195,15 @@ const jobsHtml = () => busy ? h`<span>${busy} running…</span>`
   : h`<form method=post action="/check" class=inline><button>${ic('arrow-clockwise')}Check links now</button></form>${pending() > 0 && h`<form method=post action="/archive" class=inline><button>${ic('archive')}Archive ${pending()} pages</button></form>`}`;
 
 // Browser root folders are containers, not categories: never turn them into tags.
-const ROOT_FOLDERS = new Set(['bookmarks', 'bookmarks bar', 'bookmarks toolbar', 'bookmarks menu', 'other bookmarks', 'mobile bookmarks', 'favorites', 'favourites']);
+const ROOT_FOLDERS = new Set(['bookmarks', 'bookmarks bar', 'bookmarks toolbar', 'bookmarks menu', 'other bookmarks', 'mobile bookmarks', 'favorites', 'favourites', 'favorites bar', 'other favorites']);
 // In an export a folder is <DT><H3>Name</H3><DL>…links…</DL>; the parser nests each <DL> inside the <DT> of its folder.
 const folderTags = a => {
   const names = [];
   for (let dl = a.closest('dl'); dl; dl = dl.parentElement?.closest('dl')) {
     const dt = dl.closest('dt');
     const h3 = (dt && [...dt.children].find(c => c.tagName === 'H3')) || (dl.previousElementSibling?.tagName === 'H3' ? dl.previousElementSibling : null);
-    if (h3) names.unshift(h3.textContent.trim().toLowerCase().replace(/,/g, ' ').replace(/\s+/g, ' '));
+    // the toolbar and "unfiled" folders are flagged by attribute in every browser, whatever language the name is in
+    if (h3 && !h3.hasAttribute('personal_toolbar_folder') && !h3.hasAttribute('unfiled_bookmarks_folder')) names.unshift(h3.textContent.trim().toLowerCase().replace(/,/g, ' ').replace(/\s+/g, ' '));
   }
   return names.filter(n => n && !ROOT_FOLDERS.has(n));
 };

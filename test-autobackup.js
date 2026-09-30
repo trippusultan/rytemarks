@@ -5,10 +5,10 @@ const os = require('node:os');
 const path = require('node:path');
 const Database = require('better-sqlite3');
 const { setup } = require('./test-helpers');
-const { backupName, prune, backupOnce, latestBackup } = require('./backups');
+const { backupName, prune, backupOnce, backupTo, latestBackup } = require('./backups');
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'marks-bk-test-'));
-const day = n => new Date(Date.UTC(2026, 0, n)); // day(3) = 2026-01-03
+const day = n => new Date(2026, 0, n); // local midnight; day(3) = 2026-01-03 in any timezone
 
 test('automatic backups', async t => {
   const s = await setup(t);
@@ -16,6 +16,12 @@ test('automatic backups', async t => {
   await t.test('names are dated and sort by date', () => {
     assert.equal(backupName(day(5)), 'marks-2026-01-05.db');
     assert.ok(backupName(day(9)) > backupName(day(10)) === false);
+  });
+
+  await t.test('the name follows the LOCAL calendar day (the nightly 02:15 run is cron-local, so a UTC name would say yesterday)', () => {
+    assert.equal(backupName(new Date(2026, 0, 3, 0, 1)), 'marks-2026-01-03.db');   // just after local midnight
+    assert.equal(backupName(new Date(2026, 0, 3, 23, 59)), 'marks-2026-01-03.db'); // just before the next one
+    assert.equal(backupName(new Date(2026, 11, 31, 2, 15)), 'marks-2026-12-31.db');
   });
 
   await t.test('writes a readable copy once per day, then skips, leaving no .part file', async () => {
@@ -29,6 +35,25 @@ test('automatic backups', async t => {
     copy.close();
     assert.equal((await backupOnce(db, out, { date: day(3) })).skipped, true);
     assert.deepEqual(fs.readdirSync(out), ['marks-2026-01-03.db']);
+    db.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  await t.test('backupTo (shared with `npm run backup`) replaces an existing file atomically; a failure keeps the old file and leaves no .part', async () => {
+    const dir = tmp(), dest = path.join(dir, 'x.db');
+    fs.writeFileSync(dest, 'old');
+    const closed = new Database(':memory:');
+    closed.close();
+    await assert.rejects(backupTo(closed, dest));
+    assert.equal(fs.readFileSync(dest, 'utf8'), 'old');
+    assert.deepEqual(fs.readdirSync(dir), ['x.db']);
+    const db = new Database(path.join(dir, 'src.db'));
+    db.exec('CREATE TABLE b(x); INSERT INTO b VALUES (1)');
+    await backupTo(db, dest);
+    const copy = new Database(dest, { readonly: true });
+    assert.equal(copy.prepare('SELECT count(*) n FROM b').get().n, 1);
+    copy.close();
+    assert.deepEqual(fs.readdirSync(dir).sort(), ['src.db', 'x.db']);
     db.close();
     fs.rmSync(dir, { recursive: true, force: true });
   });
