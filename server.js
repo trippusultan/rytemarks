@@ -292,6 +292,7 @@ app.get('/b/:id', (req, res) => {
     <form class=edit method=post action="/b/${b.id}">${req.query.new && h`<input type=hidden name=done value=1>`}
     <label for=title>Title</label><input type=text id=title name=title value="${b.title}" placeholder="${domain(b.url)}">
     <label for=tags>Tags (comma separated)</label><input type=text id=tags name=tags value="${b.tags.join(', ')}" autocomplete=off list=tl autofocus><datalist id=tl></datalist>
+    <div class=chips>${allTags().slice(0, 12).map(t => h`<button type=button class=chip data-t="${t.tag}">#${t.tag}</button>`)}</div>
     <label for=note>Note</label><textarea id=note name=note rows=5>${b.note}</textarea>
     <p><button>Save</button> <a href="/">Cancel</a></p></form>
     <form method=post action="/b/${b.id}/delete" onsubmit="return confirm('Delete this bookmark?')"><button>Delete</button></form>
@@ -304,6 +305,16 @@ app.get('/b/:id', (req, res) => {
       dl.replaceChildren(...(word?T.filter(t=>t.startsWith(word)&&!have.slice(0,-1).includes(t)).slice(0,8):[])
         .map(t=>Object.assign(document.createElement('option'),{value:head+lead+t})));
     });
+    const chips=[...document.querySelectorAll('.chip')],note=document.getElementById('note');
+    const list=()=>inp.value.split(',').map(s=>s.trim()).filter(Boolean);
+    const sync=()=>{const on=list().map(s=>s.toLowerCase());chips.forEach(c=>c.classList.toggle('on',on.includes(c.dataset.t)))};
+    chips.forEach(c=>c.addEventListener('click',()=>{
+      const cur=list(),i=cur.map(s=>s.toLowerCase()).indexOf(c.dataset.t);
+      if(i<0)cur.push(c.dataset.t);else cur.splice(i,1);
+      inp.value=cur.length?cur.join(', ')+', ':'';inp.focus();sync();
+    }));
+    inp.addEventListener('input',sync);sync();
+    note.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))e.target.form.requestSubmit()});
     </script>`));
 });
 
