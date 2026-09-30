@@ -23,4 +23,12 @@ test('archive backfill', async t => {
   await t.test('POST /archive redirects (nothing pending, so the job is a no-op)', async () => {
     assert.equal((await s.post('/archive', '')).status, 303);
   });
+
+  await t.test('a network failure is not final: the page stays pending', async () => {
+    await s.post('/import', '<DL><DT><A HREF="http://127.0.0.1:1/unreachable">Offline</A></DL>', { 'content-type': 'text/plain', origin: s.base });
+    assert.equal(await s.archiveMissing(), 0);
+    const r = s.db.prepare("SELECT archived_at FROM bookmarks WHERE url = 'http://127.0.0.1:1/unreachable'").get();
+    assert.equal(r.archived_at, null);
+    assert.equal(s.db.prepare("SELECT count(*) n FROM bookmarks WHERE archived_at IS NULL AND text = ''").get().n, 1);
+  });
 });

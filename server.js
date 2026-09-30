@@ -122,7 +122,7 @@ async function archiveMissing() {
   let n = 0;
   for (const { id, url } of db.prepare("SELECT id, url FROM bookmarks WHERE archived_at IS NULL AND text = ''").all()) {
     const m = await scrape(url);
-    upd.run(m.text, m.description, m.image, m.favicon, m.status, m.status && now(), now(), id);
+    upd.run(m.text, m.description, m.image, m.favicon, m.status, m.status && now(), m.status && now(), id); // no HTTP status = network failure: leave pending for a retry
     if (m.text) n++;
   }
   return n;
