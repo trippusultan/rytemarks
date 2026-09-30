@@ -230,35 +230,37 @@ const safeBack = s => {
 const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
-const CSS = `:root{color-scheme:light dark;--bg:#fff;--fg:#1c1c1e;--mut:#6b6b73;--line:#e4e4e8;--acc:#2f6fed;--chip:#eef1f7;--hover:#f6f7fb;--bad:#c2410c;--ok:#15803d}
-@media(prefers-color-scheme:dark){:root{--bg:#141416;--fg:#ececf1;--mut:#9a9aa6;--line:#2a2a30;--acc:#7aa2ff;--chip:#23262f;--hover:#1b1b20;--bad:#fb923c;--ok:#4ade80}}
-body{background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,sans-serif;max-width:1000px;margin:0 auto;padding:1rem 1.25rem 3rem}
+const CSS = `:root{color-scheme:light dark;--bg:#fbfaf7;--fg:#1d1d1a;--mut:#6d6c66;--line:#e6e4dd;--acc:#2f6f5e;--on-acc:#ffffff;--chip:#efede6;--hover:#f4f2ec;--bad:#b4472b}
+@media(prefers-color-scheme:dark){:root{--bg:#131412;--fg:#ecebe6;--mut:#9a9990;--line:#2a2b27;--acc:#6fbfa6;--on-acc:#0f1a16;--chip:#22241f;--hover:#1a1c18;--bad:#e58a6b}}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 "Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:1000px;margin:0 auto;padding:1rem 1.25rem 3rem}
+h2,h3{font-weight:600;letter-spacing:-.015em;line-height:1.25}
 a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
-header>a{color:var(--fg);font-size:1.15rem}
+header>a{color:var(--fg);font-size:1.15rem;font-weight:600;letter-spacing:-.02em}
 header form{flex:1;display:flex;gap:.5rem;min-width:14rem}header input{flex:1}
 input,textarea,button{font:inherit;padding:.45rem .65rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
-button{background:var(--acc);border-color:var(--acc);color:#fff;cursor:pointer}button:hover{filter:brightness(1.08)}
+button{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500;cursor:pointer}button:hover{filter:brightness(1.08)}
 .layout{display:grid;grid-template-columns:1fr 12rem;gap:2rem}
 @media(max-width:700px){.layout{grid-template-columns:1fr}}
 ul{list-style:none;padding:0;margin:0}
 li.b{display:flex;gap:.75rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);border-radius:8px}
 li.b:hover{background:var(--hover)}
+li.b>div>a:first-child{font-weight:500}
 .fav{width:16px;height:16px;margin-top:.3rem;flex:none}
 .meta{color:var(--mut);font-size:13px}.meta a{color:inherit}.meta a:hover{color:var(--acc)}
 .dead{color:var(--bad);font-weight:600;font-size:12px}
-aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.15rem 0}aside a.on{color:var(--fg);font-weight:700}
+aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.15rem 0}aside a.on{color:var(--fg);font-weight:600}
 label{display:block;margin:.9rem 0 .25rem;font-weight:600;font-size:13px}
 form.edit input[type=text],textarea{width:100%;box-sizing:border-box}
 footer{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px}footer a{color:inherit}
 .add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
-mark{background:#fd0;color:#000;border-radius:3px;padding:0 .1rem}
+mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:3px;padding:0 .1rem}
 form.inline{display:inline}form.inline button{padding:.1rem .5rem;font-size:13px}
-.flash{background:var(--chip);border-left:3px solid var(--ok);padding:.5rem .75rem;border-radius:8px}
+.flash{background:var(--chip);border-left:3px solid var(--acc);padding:.5rem .75rem;border-radius:8px}
 .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
 .chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:999px;padding:.15rem .65rem;font-size:13px}
-.chip.on{background:var(--acc);color:#fff}
+.chip.on{background:var(--acc);color:var(--on-acc)}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}
 form[action$="/delete"] button{background:transparent;color:var(--bad);border-color:var(--bad)}`;
 
