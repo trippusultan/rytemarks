@@ -277,7 +277,8 @@ app.use((req, res, next) => {
   if (!/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(req.headers.host || '')) return res.status(403).send('bad host');
   const o = req.headers.origin;
   if (req.method === 'POST' && req.path !== '/save' && o && o !== `http://${req.headers.host}`) return res.status(403).send('cross-origin');
-  res.set('Referrer-Policy', 'no-referrer');
+  // not "no-referrer": that makes browsers send "Origin: null" on our own form posts and the check above rejects them
+  res.set('Referrer-Policy', 'same-origin');
   next();
 });
 app.use(express.urlencoded({ extended: false }));
