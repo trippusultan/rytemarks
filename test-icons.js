@@ -96,7 +96,7 @@ test('icons, navbar, tab bar, footer', async t => {
     const footer = /<footer>[\s\S]*<\/footer>/.exec(home)[0];
     has(footer, '<footer><div class=fbar><div class=fl2>');
     has(footer, `Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${svg('github-logo')}@trippusultan</a>`);
-    has(footer, `title="Drag this to your bookmarks bar">${svg('plus')}Save to marks</a>`);
+    has(footer, `title="Drag this to your bookmarks bar">${svg('plus')}Save to rytemarks</a>`);
     has(footer, `<a href="/bookmarklet">${svg('question')}Install help</a>`);
     has(footer, `<a href="/export?format=json">${svg('download-simple')}Export JSON</a>`);
     has(footer, `<a href="/export?format=csv">${svg('download-simple')}Export CSV</a>`);

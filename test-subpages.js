@@ -158,7 +158,7 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
   // ---------- bookmarklet ----------
   await t.test('bookmarklet: three numbered steps, a draggable button, a Copy button, code behind a disclosure', async () => {
     const html = await s.get('/bookmarklet');
-    assert.match(html, /<h1>Save button<\/h1><p class=lede>One click on any page saves it to marks\./);
+    assert.match(html, /<h1>Save button<\/h1><p class=lede>One click on any page saves it to rytemarks\./);
     assert.match(html, /<ol class=steps><li><b>Show your bookmarks bar\.<\/b>/);
     assert.equal((/<ol class=steps>([\s\S]*?)<\/ol>/.exec(html)[1].match(/<li>/g) || []).length, 3);
     assert.match(html, /<a class=dragbtn href="javascript:/);

@@ -74,7 +74,7 @@ test('glow: hero stats, ambient light, glass, type scale, grain', async t => {
   });
 
   await t.test('CSS: bolder type scale and a phone layout for the tiles', () => {
-    assert.match(css, /h1\{[^}]*font-size:clamp\(2\.2rem,5vw,3\.4rem\)[^}]*letter-spacing:-\.05em/);
+    assert.match(css, /h1\{[^}]*font-size:clamp\(1\.9rem,4\.4vw,3rem\)[^}]*letter-spacing:-\.02em/);
     assert.match(css, /\.card \.t\{[^}]*font-size:1\.06rem/);
     assert.match(css, /\.card\.feat \.t\{[^}]*font-size:1\.4rem/);
     assert.match(css, /\.big\{[^}]*font-family:var\(--mono\)/);

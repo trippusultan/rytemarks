@@ -12,7 +12,7 @@ const metascraper = require('metascraper')([
 
 const PORT = +process.env.PORT || 4040; // PORT=4141 lets a preview run beside your real instance
 const PAGE = 100;
-const UA = 'Mozilla/5.0 (compatible; marks personal bookmark archiver)';
+const UA = 'Mozilla/5.0 (compatible; rytemarks personal bookmark archiver)';
 
 // One file, default rollback journal (no -wal sidecar), so copying it while idle is a valid backup.
 const db = new Database(process.env.MARKS_DB || path.join(__dirname, 'marks.db'));
@@ -230,15 +230,15 @@ const safeBack = s => {
 const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
-const CSS = `:root{color-scheme:light dark;--r:8px;--sans:"Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c;--glow:6%;--grain:.05}
+const CSS = `:root{color-scheme:light dark;--r:8px;--mono:"Cascadia Mono","Cascadia Code","JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;--ui:var(--mono);--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c;--glow:6%;--grain:.05}
 @media(prefers-color-scheme:dark){:root{--bg:#0a1013;--surface:#111a1e;--fg:#e7f0f2;--mut:#8fa2a9;--line:#223037;--acc:#3fe0bd;--on-acc:#03211a;--chip:#19252a;--hover:#152127;--bad:#ff8b6e;--glow:18%;--grain:.06}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);min-height:100dvh;display:flex;flex-direction:column}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 var(--ui);min-height:100dvh;display:flex;flex-direction:column}
 [hidden]{display:none!important}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60rem 38rem at 88% -8%,color-mix(in srgb,var(--acc) var(--glow),transparent),transparent 62%),radial-gradient(44rem 30rem at -8% 22%,color-mix(in srgb,var(--acc) var(--glow),transparent),transparent 58%)}
 body::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;opacity:var(--grain);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-h1{margin:.2rem 0 1rem;font-size:clamp(2.2rem,5vw,3.4rem);font-weight:750;letter-spacing:-.05em;line-height:1;text-wrap:balance}
-h2,h3{font-weight:700;letter-spacing:-.03em;line-height:1.15;text-wrap:balance}
+h1{margin:.2rem 0 1rem;font-size:clamp(1.9rem,4.4vw,3rem);font-weight:750;letter-spacing:-.02em;line-height:1;text-wrap:balance}
+h2,h3{font-weight:700;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
 h2{font-size:clamp(1.5rem,3.2vw,2rem)}
 a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
@@ -247,16 +247,16 @@ header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center
 main{width:100%;flex:1;max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
 footer{max-width:1200px;width:100%;margin:0 auto;padding:1.25rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:flex;flex-direction:column;gap:.6rem}footer a{color:inherit}
 .fbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem 1.5rem}
-.fl2{display:flex;align-items:center;gap:.6rem;color:var(--fg)}.fl2 .mark{width:20px;height:15px}
+.fl2{display:flex;align-items:center;gap:.6rem;color:var(--fg)}
 .fl2 a{display:inline-flex;align-items:center;gap:.3rem;color:var(--acc);font-weight:500}
 .fr2{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.1rem}.fr2 a{display:inline-flex;align-items:center;gap:.35rem}
 .fine{margin:0;font-size:12px}
 .jobs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}.side .jobs{margin-top:.75rem}
 .drag{padding:.25rem .6rem;border:1px dashed var(--line);border-radius:var(--r);color:var(--fg);cursor:grab}
 .drag:hover{border-color:var(--acc);color:var(--acc);text-decoration:none}
-.brand{display:flex;align-items:center;gap:.55rem;color:var(--fg)}.brand:hover{text-decoration:none}
-.mark{display:block}
-.wordmark{font-family:var(--sans);font-size:1.5rem;font-weight:750;letter-spacing:-.045em;line-height:1}
+.brand{display:flex;align-items:center;gap:.55rem;height:2.25rem;padding:0 .2rem;border-radius:var(--r)}.brand:hover{text-decoration:none}
+.logo-mark{display:block;height:34px;width:auto}.logo-word{display:block;height:24px;width:auto}
+@media(prefers-color-scheme:dark){.brand{background:#f3f6f7;padding:0 .7rem}}
 .tagline{font-weight:650;font-size:1.15rem;letter-spacing:-.02em;color:var(--acc);margin:.25rem 0 .75rem}
 .topnav{display:flex;gap:.15rem;align-items:center;margin-right:auto}
 .topnav a{display:flex;align-items:center;gap:.45rem;padding:.4rem .75rem;border-radius:var(--r);color:var(--mut);font-weight:500;white-space:nowrap}
@@ -295,7 +295,7 @@ ul{list-style:none;padding:0;margin:0}
 .dom{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .t{font-weight:650;font-size:1.06rem;letter-spacing:-.015em;line-height:1.3;color:var(--fg);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .card .t:hover{color:var(--acc);text-decoration:none}
-.card.feat .t{font-size:1.4rem;letter-spacing:-.03em;-webkit-line-clamp:4}
+.card.feat .t{font-size:1.4rem;letter-spacing:-.02em;-webkit-line-clamp:4}
 .note{margin:0;color:var(--mut);font-size:13px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .foot{margin-top:auto;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:12px}
 .foot .edit{margin-left:auto;color:var(--mut)}
@@ -356,7 +356,7 @@ form[action$="/delete"] button{background:transparent;color:var(--bad);border-co
 @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
 .tile{display:flex;flex-direction:column;gap:.4rem;padding:.9rem 1rem;background:color-mix(in srgb,var(--surface) 78%,transparent);border:1px solid var(--line);border-radius:var(--r);color:var(--fg);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--fg) 8%,transparent);animation:rise .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:calc(var(--i)*60ms)}
 .tile span{color:var(--mut);font-size:13px}
-.big{font-family:var(--mono);font-size:2rem;font-weight:600;letter-spacing:-.04em;line-height:1}
+.big{font-family:var(--mono);font-size:2rem;font-weight:600;letter-spacing:-.02em;line-height:1}
 a.tile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));text-decoration:none;transform:translateY(-2px)}
 .tile.bad .big{color:var(--bad)}
 @media(prefers-reduced-transparency:reduce){.card,.side,.toast,#palette{background:var(--surface);backdrop-filter:none;-webkit-backdrop-filter:none}}
@@ -407,6 +407,7 @@ button{display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
 .btn.addbtn{display:inline-flex;align-items:center;gap:.4rem}
 .field .ic,.add>.ic{color:var(--mut)}.field .ic{margin-left:.65rem}.add>.ic{margin-right:-.15rem}
 .bar2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}.bar2 .add{margin-bottom:0}.bar2 .field{padding-right:0}
+.bar2 .field,.bar2 .add{height:3rem;margin:0}.bar2 .field input,.bar2 .add input{height:100%;padding:0}.bar2 .add button{align-self:stretch}
 .palrow{display:flex;align-items:center;gap:.6rem;padding-left:1rem;border-bottom:1px solid var(--line);color:var(--mut)}.palrow #pal-q{border-bottom:0}
 .ti{display:flex;color:var(--acc);font-size:1.25rem}.tile.bad .ti{color:var(--bad)}
 .ei{display:block;margin-bottom:.4rem;color:var(--acc);font-size:2rem;line-height:1}
@@ -424,8 +425,6 @@ button:active,.chip:active{transform:scale(.98)}
 .skip{position:absolute;left:-999px;top:0}.skip:focus{left:.75rem;top:.75rem;background:var(--acc);color:var(--on-acc);padding:.4rem .7rem;border-radius:var(--r);z-index:30}`;
 // The brand mark (docs/brand/brand-board.html is the design source): four ink tally strokes and a moss ribbon,
 // so it reads as a hand tally and as a bookmark ribbon at once. Ink follows the text colour, the ribbon the accent.
-const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
-const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 
 // Icons: Phosphor (MIT), copied into icons.js and shipped as ONE inline sprite on every page (no requests, no runtime dependency).
 const ICONS = require('./icons');
@@ -445,11 +444,11 @@ const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype ht
 <meta name=description content="Your personal bookmark archive: saved pages, tags, notes and full-text search on your own machine.">
 <meta name=theme-color content="#f3f6f7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#0a1013" media="(prefers-color-scheme: dark)">
 <script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
-<link rel=icon href="${FAVICON}"><style>${CSS}</style>
-${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>${navHtml(cur)}<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${ic('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
+<link rel=icon type="image/png" href="/favicon.png"><style>${CSS}</style>
+${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand><img class=logo-mark src="/rytemarks-mark.png" alt="" width=17 height=34><img class=logo-word src="/rytemarks-wordmark.png" alt="rytemarks" width=125 height=24></a>${navHtml(cur)}<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${ic('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
 <main id=main>${body}</main>
-<footer><div class=fbar><div class=fl2>${raw(MARK_SVG)}<span>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${ic('github-logo')}@trippusultan</a></span></div>
-<div class=fr2><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">${ic('plus')}Save to marks</a><a href="/bookmarklet">${ic('question')}Install help</a><a href="/export?format=json">${ic('download-simple')}Export JSON</a><a href="/export?format=csv">${ic('download-simple')}Export CSV</a></div></div>
+<footer><div class=fbar><div class=fl2><span>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${ic('github-logo')}@trippusultan</a></span></div>
+<div class=fr2><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">${ic('plus')}Save to rytemarks</a><a href="/bookmarklet">${ic('question')}Install help</a><a href="/export?format=json">${ic('download-simple')}Export JSON</a><a href="/export?format=csv">${ic('download-simple')}Export CSV</a></div></div>
 <p class=fine>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom. Icons by Phosphor (MIT).</p></footer>
 ${tabHtml(cur)}
 <dialog id=palette aria-label="Command palette"><div class=palrow>${ic('magnifying-glass')}<input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"></div><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
@@ -508,6 +507,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public'), { index: false })); // logo files only; nothing else is reachable
 
 app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();
@@ -540,7 +540,7 @@ app.get('/', (req, res) => {
   const tagList = allTags(), deadCount = db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n;
   const showHero = !filtered && !empty && pg === 1;
   const weekCount = showHero ? db.prepare('SELECT count(*) n FROM bookmarks WHERE saved_at >= ?').get(now() - 7 * 86400).n : 0;
-  res.send(page('marks', h`${showHero && h`<section class=hero aria-label="Library overview"><h1>Your library</h1><div class=stats><a class=tile style="--i:0" href="/"><span class=ti>${ic('bookmarks-simple')}</span><b class=big>${total}</b><span>Saved</span></a><div class=tile style="--i:1"><span class=ti>${ic('calendar-blank')}</span><b class=big>${weekCount}</b><span>This week</span></div><a class=tile style="--i:2" href="/tags"><span class=ti>${ic('tag')}</span><b class=big>${tagList.length}</b><span>Tags</span></a><a class="tile${deadCount ? ' bad' : ''}" style="--i:3" href="/?dead=1"><span class=ti>${ic('link-break')}</span><b class=big>${deadCount}</b><span>Dead links</span></a></div></section>`}<div class=layout>
+  res.send(page('rytemarks', h`${showHero && h`<section class=hero aria-label="Library overview"><h1>Your library</h1><div class=stats><a class=tile style="--i:0" href="/"><span class=ti>${ic('bookmarks-simple')}</span><b class=big>${total}</b><span>Saved</span></a><div class=tile style="--i:1"><span class=ti>${ic('calendar-blank')}</span><b class=big>${weekCount}</b><span>This week</span></div><a class=tile style="--i:2" href="/tags"><span class=ti>${ic('tag')}</span><b class=big>${tagList.length}</b><span>Tags</span></a><a class="tile${deadCount ? ' bad' : ''}" style="--i:3" href="/?dead=1"><span class=ti>${ic('link-break')}</span><b class=big>${deadCount}</b><span>Dead links</span></a></div></section>`}<div class=layout>
     <section><div class=bar2><form action="/" role=search class=hsearch><div class=field>${ic('magnifying-glass')}<input type=search name=q value="${q}" placeholder="Search bookmarks" aria-label="Search title, note and page text">${tag && h`<input type=hidden name=tag value="${tag}">`}</div><button class=sr>Search</button></form><form method=post action="/save" class=add>${ic('plus')}<label class=sr for=add-url>Web address to save</label><input id=add-url type=text name=url inputmode=url autocomplete=off placeholder="Paste a URL to save" required><button>${ic('floppy-disk')}Save</button></form></div>
     ${ok && h`<div class="toast${keepToast ? ' keep' : ''}" role=status><span class=tick>${ic('check-circle')}</span>${ok}${keepToast && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</div>`}
     <div class=toolbar>${filtered ? h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>` : h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}</p>`}
@@ -564,13 +564,13 @@ app.get('/save', (req, res) => {
     <script>document.getElementById('f').submit()</script>`));
 });
 
-app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`${pageHead('Save button', 'One click on any page saves it to marks. The server must be running when you click.')}
+app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`${pageHead('Save button', 'One click on any page saves it to rytemarks. The server must be running when you click.')}
 <ol class=steps><li><b>Show your bookmarks bar.</b> Press Ctrl+Shift+B (Cmd+Shift+B on a Mac) in Chrome, Edge or Firefox.</li>
-<li><b>Drag this button onto the bar.</b><span class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a><button type=button class=ghost data-copy=code-std>${ic('copy')}<span class=bl>Copy code</span></button></span></li>
+<li><b>Drag this button onto the bar.</b><span class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET))}">+ Save to rytemarks</a><button type=button class=ghost data-copy=code-std>${ic('copy')}<span class=bl>Copy code</span></button></span></li>
 <li><b>Click it on any page.</b> A new tab opens on the edit screen: add tags and press Save.</li></ol>
 <details class=howto><summary>${ic('caret-right')}Show the code</summary><textarea id=code-std readonly rows=6 onclick="this.select()">${BOOKMARKLET}</textarea></details>
 <h3>If the button is blocked</h3><p class=meta>Some sites block pop-ups. This variant works in the same tab; drag it the same way.</p>
-<p class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET_GET))}">+ Save to marks (simple)</a><button type=button class=ghost data-copy=code-get>${ic('copy')}<span class=bl>Copy code</span></button></p>
+<p class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET_GET))}">+ Save to rytemarks (simple)</a><button type=button class=ghost data-copy=code-get>${ic('copy')}<span class=bl>Copy code</span></button></p>
 <details class=howto><summary>${ic('caret-right')}Show the simple code</summary><textarea id=code-get readonly rows=3 onclick="this.select()">${BOOKMARKLET_GET}</textarea></details>
 <p class=meta>Have an older save bookmark that says "No web address arrived"? Delete it and install this one.</p>
 <script>document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{const ta=document.getElementById(b.dataset.copy);try{await navigator.clipboard.writeText(ta.value)}catch(e){const d=ta.closest('details');if(d)d.open=true;ta.select();document.execCommand('copy')}const l=b.querySelector('.bl'),t=l.textContent;l.textContent='Copied';setTimeout(()=>{l.textContent=t},1600)}))</script>`)));
@@ -633,7 +633,7 @@ app.post('/b/:id', (req, res) => {
     .run(String(req.body.title || '').trim(), String(req.body.note || '').trim(), id);
   if (!r.changes) return res.sendStatus(404);
   setTags(id, parseTags(req.body.tags));
-  if (req.body.done) return res.send(page('Saved', h`<p>Saved ✓ You can close this tab.</p><p><a href="/">Open marks</a></p><script>window.close()</script>`));
+  if (req.body.done) return res.send(page('Saved', h`<p>Saved ✓ You can close this tab.</p><p><a href="/">Open rytemarks</a></p><script>window.close()</script>`));
   res.redirect(303, withOk(safeBack(req.body?.back), 'saved'));
 });
 
@@ -764,6 +764,6 @@ app.use((req, res) => messagePage(res, 404, 'Page not found', h`<p class=meta>No
 module.exports = { app, db, checkLinks, archiveMissing, parseNetscape, settled, ago, undo, safeBack };
 
 if (require.main === module) {
-  app.listen(PORT, '127.0.0.1', () => console.log(`marks: http://localhost:${PORT}  db: ${db.name}`));
+  app.listen(PORT, '127.0.0.1', () => console.log(`rytemarks: http://localhost:${PORT}  db: ${db.name}`));
   cron.schedule('0 3 * * 0', () => checkLinks().catch(console.error)); // Sundays 03:00, only while the server runs
 }

@@ -1,4 +1,4 @@
-# marks
+# rytemarks
 
 Personal bookmark manager. Node + Express + better-sqlite3, server-rendered, one SQLite file, localhost only. No accounts, no telemetry.
 
@@ -32,15 +32,15 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 
 ## Backups and auto-start
 
-`npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run marks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
+`npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run rytemarks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
 
 ## Brand
 
-The look is defined in `docs/brand/brand-board.html` (open it in a browser): light editorial, paper / ink / moss, a tally-mark logo (four strokes and a ribbon), a local serif for the name and headings, system sans for everything else, light first with dark following the system. The app's header mark, favicon and palette use the same paths and hex values; `test-brand.js` keeps the two in sync.
+The logo is the supplied tally-mark-and-ribbon mark plus the "rytemarks" wordmark. The originals are in `docs/brand/logo/`; the copies the app serves are in `public/` (the wordmark had an opaque black background, so it was keyed to transparent in the same slate ink as the mark, and there is a square favicon on a light chip). On the dark theme the slate logo sits on a light chip so it stays readable. `docs/brand/brand-board.html` holds the palette and tagline; `test-brand.js` keeps the palette in sync. The database file is still `marks.db`.
 
 ## Look and shortcuts
 
-Cool slate neutrals with one mint-teal accent, a heavy local sans (no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page opens with a "Your library" hero and four live stat tiles (saved, this week, tags, dead links; shown only on the unfiltered first page), with soft accent light behind the page, glass panels and a faint grain (all off or solid under reduced transparency and reduced motion). Below it is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion.
+Cool slate neutrals with one mint-teal accent, a local terminal-style monospace stack (Cascadia Mono, JetBrains Mono, SF Mono, Menlo, Consolas; no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page opens with a "Your library" hero and four live stat tiles (saved, this week, tags, dead links; shown only on the unfiltered first page), with soft accent light behind the page, glass panels and a faint grain (all off or solid under reduced transparency and reduced motion). Below it is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion.
 
 Navigation is an icon + label top bar (a bottom tab bar on phones) with a search button that opens the palette and a filled Add button; the footer is one slim bar with the credit and tool links. Check links and Archive pages live in the Status panel on the home page.
 
