@@ -54,6 +54,6 @@ test('chrome: toast, add composer, header, footer', async t => {
     assert.doesNotMatch(nav(await nope.text()), /aria-current/);
     assert.match(css, /\.topnav\{[^}]*display:flex/);
     assert.match(css, /\.kbd\{[^}]*white-space:nowrap/); // "Ctrl K" must not wrap onto two lines in a narrow field
-    assert.match(css, /\.topnav a\[aria-current=page\]\{[^}]*box-shadow:inset 0 -2px 0 var\(--acc\)/);
+    assert.match(css, /\.topnav a\[aria-current=page\]\{[^}]*box-shadow:inset 0 -3px 0 var\(--acc\)/);
   });
 });

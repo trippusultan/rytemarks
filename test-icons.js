@@ -61,11 +61,11 @@ test('icons, navbar, tab bar, footer', async t => {
     assert.match(css, /\.tabbar\{[^}]*display:none/);
     const phone = css.lastIndexOf('@media(max-width:640px){.topnav{display:none}');
     assert.ok(phone > css.indexOf('.topnav{') && phone > css.indexOf('.tabbar{'), 'phone block after both base rules');
-    const block = css.slice(phone, phone + 900);
+    const block = css.slice(phone, css.indexOf('\n', phone));
     assert.match(block, /\.tabbar\{[^}]*position:fixed[^}]*bottom:0[^}]*display:grid/);
-    assert.match(block, /body\{[^}]*padding-bottom:4\.5rem/);
-    assert.match(block, /\.toast\{[^}]*bottom:calc\(4\.75rem/);
-    assert.match(block, /\.searchbtn \.lbl,\.searchbtn \.kbd\{display:none\}/);
+    assert.match(block, /body\{[^}]*padding-bottom:5rem/);
+    assert.match(block, /\.toast\{[^}]*bottom:calc\(5\.25rem/);
+    assert.match(block, /\.searchbtn \.kbd\{display:none\}/);
     assert.match(block, /[{}]\.btn\.addbtn\{display:none\}/); // must match the base rule's specificity (.btn.addbtn), or the top-bar Add stays beside the tab bar's Add
     assert.match(css, /@media\(prefers-reduced-transparency:reduce\)\{[^@]*\.tabbar[^{]*\{[^}]*backdrop-filter:none/);
     assert.match(css, /\.tabbar a\[aria-current=page\]\{[^}]*color:var\(--acc\)/);
@@ -103,7 +103,7 @@ test('icons, navbar, tab bar, footer', async t => {
     has(footer, '<p class=fine>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom. Icons by Phosphor (MIT).</p>');
     assert.doesNotMatch(footer.replace(/<[^>]+>/g, ' '), /Maintenance|Check links|Archive/);
     assert.match(css, /footer\{[^}]*display:flex[^}]*flex-direction:column/);
-    assert.match(css, /\.fbar\{[^}]*justify-content:space-between/);
+    assert.match(css, /\.fbar\{[^}]*flex-direction:column[^}]*justify-content:center/);
   });
 
   await t.test('Status panel now holds Check links and Archive (with icons)', () => {
