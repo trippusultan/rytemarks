@@ -29,6 +29,12 @@ test('design rules', async t => {
       assert.ok(contrast(p.fg, p.bg) >= 7, 'body text');
       assert.ok(contrast(p.mut, p.bg) >= 4.5, 'muted text');
       assert.ok(contrast(p.acc, p.bg) >= 4.5, 'accent used as link text');
+      assert.ok(p.surface, 'defines --surface for cards');
+      assert.ok(contrast(p.fg, p.surface) >= 7, 'body text on cards');
+      assert.ok(contrast(p.mut, p.surface) >= 4.5, 'muted text on cards');
+      assert.ok(contrast(p.acc, p.surface) >= 4.5, 'accent text on cards');
+      assert.ok(contrast(p.acc, p.chip) >= 4.5, 'accent text on chips');
+      assert.ok(contrast(p.bad, p.surface) >= 4.5, 'warning colour on cards');
       assert.ok(contrast(p['on-acc'], p.acc) >= 4.5, 'text on accent buttons');
       assert.ok(contrast(p.bad, p.bg) >= 4.5, 'warning colour');
     });
@@ -36,7 +42,10 @@ test('design rules', async t => {
 
   await t.test('one desaturated accent, same hue family in both themes', () => {
     const [a, b] = [hsl(light.acc), hsl(dark.acc)];
-    assert.ok(a.s < 60 && b.s < 60, `saturation ${a.s.toFixed(0)}/${b.s.toFixed(0)}`);
+    assert.ok(a.s < 80 && b.s < 80, `saturation ${a.s.toFixed(0)}/${b.s.toFixed(0)}`);
+    assert.ok(a.h > 150 && a.h < 190 && b.h > 150 && b.h < 190, 'mint-teal hue');
+    assert.ok(hsl(light.bg).h > 170 && hsl(light.bg).h < 230 && hsl(light.bg).s < 30, 'cool, quiet light neutral (no warm paper)');
+    assert.doesNotMatch(css, /#2f6f5e|#6fbfa6|#fbfaf7|#131412/i, 'previous moss and paper palette is gone');
     assert.ok(Math.abs(a.h - b.h) < 20, `hue ${a.h.toFixed(0)} vs ${b.h.toFixed(0)}`);
     assert.doesNotMatch(css, /#2f6fed|#7aa2ff/i, 'old blue is gone');
     assert.doesNotMatch(css, /#fd0/i, 'no second (yellow) accent');
@@ -50,7 +59,7 @@ test('design rules', async t => {
   });
 
   await t.test('weight hierarchy beyond regular and bold', () => {
-    assert.match(css, /li\.b>div>a:first-child\{font-weight:500\}/); // list titles only, not the first tag in the meta line
+    assert.match(css, /\.card \.t\{[^}]*font-weight:\s*650/); // card titles only
     assert.match(css, /font-weight:\s*600/); // headings, labels
     assert.match(css, /letter-spacing:\s*-\.\d+em/); // tighter heading tracking
   });

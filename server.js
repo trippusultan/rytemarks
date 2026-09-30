@@ -230,63 +230,142 @@ const safeBack = s => {
 const BOOKMARKLET = `javascript:(function(){var u='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href);if(!window.open(u))location=u})()`;
 const BOOKMARKLET_GET = `javascript:location='http://localhost:${PORT}/save?url='+encodeURIComponent(location.href)`;
 const FAV_FALLBACK = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Ccircle cx="8" cy="8" r="6" fill="none" stroke="%23999" stroke-width="1.5"/%3E%3Cpath d="M2 8h12M8 2c3 3 3 9 0 12M8 2c-3 3-3 9 0 12" stroke="%23999" fill="none"/%3E%3C/svg%3E`;
-const CSS = `:root{color-scheme:light dark;--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;--bg:#fbfaf7;--fg:#1d1d1a;--mut:#6d6c66;--line:#e6e4dd;--acc:#2f6f5e;--on-acc:#ffffff;--chip:#efede6;--hover:#f4f2ec;--bad:#b4472b}
-@media(prefers-color-scheme:dark){:root{--bg:#131412;--fg:#ecebe6;--mut:#9a9990;--line:#2a2b27;--acc:#6fbfa6;--on-acc:#0f1a16;--chip:#22241f;--hover:#1a1c18;--bad:#e58a6b}}
-body{background:var(--bg);color:var(--fg);font:15px/1.55 "Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:1000px;margin:0 auto;padding:1rem 1.25rem 3rem}
-h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.015em;line-height:1.25;text-wrap:balance}
+const CSS = `:root{color-scheme:light dark;--r:8px;--sans:"Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;--bg:#f3f6f7;--surface:#fbfcfc;--fg:#0d1a1f;--mut:#52626a;--line:#d9e2e5;--acc:#147863;--on-acc:#ffffff;--chip:#e4edef;--hover:#e9f0f2;--bad:#b3361c}
+@media(prefers-color-scheme:dark){:root{--bg:#0a1013;--surface:#111a1e;--fg:#e7f0f2;--mut:#8fa2a9;--line:#223037;--acc:#3fe0bd;--on-acc:#03211a;--chip:#19252a;--hover:#152127;--bad:#ff8b6e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans)}
+h2,h3{font-weight:700;letter-spacing:-.03em;line-height:1.15;text-wrap:balance}
 a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-header{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
+header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding:.7rem max(1.25rem,calc((100vw - 1200px)/2));background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line)}
+@media(prefers-reduced-transparency:reduce){header{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
+main{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
+footer{max-width:1200px;margin:0 auto;padding:1rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px}footer a{color:inherit}
 .brand{display:flex;align-items:center;gap:.55rem;color:var(--fg)}.brand:hover{text-decoration:none}
 .mark{display:block}
-.wordmark{font-family:var(--serif);font-size:1.45rem;font-weight:600;letter-spacing:-.02em;line-height:1}
-.tagline{font-family:var(--serif);font-size:1.15rem;color:var(--acc);margin:.25rem 0 .75rem}
-header form{flex:1;display:flex;gap:.5rem;min-width:14rem}header input{flex:1}
-input,textarea,button{font:inherit;padding:.45rem .65rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
-button{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500;cursor:pointer}button:hover{filter:brightness(1.08)}
-.layout{display:grid;grid-template-columns:1fr 12rem;gap:2rem}
+.wordmark{font-family:var(--sans);font-size:1.5rem;font-weight:750;letter-spacing:-.045em;line-height:1}
+.tagline{font-weight:650;font-size:1.15rem;letter-spacing:-.02em;color:var(--acc);margin:.25rem 0 .75rem}
+header form{flex:1;display:flex;gap:.5rem;min-width:14rem;align-items:center}
+.field{display:flex;flex:1;align-items:center;gap:.4rem;padding-right:.4rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.field:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.field input{flex:1;border:0;background:transparent;outline:none}
+.kbd{background:var(--chip);color:var(--mut);border:1px solid var(--line);padding:.1rem .45rem;font:11px var(--mono);font-weight:500}
+input,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--fg)}
+button{font:inherit;padding:.5rem .85rem;border:1px solid var(--acc);border-radius:var(--r);background:var(--acc);color:var(--on-acc);font-weight:600;cursor:pointer}button:hover{filter:brightness(1.08)}
+.layout{display:grid;grid-template-columns:1fr 13rem;gap:2rem;align-items:start}
 @media(max-width:700px){.layout{grid-template-columns:1fr}}
 ul{list-style:none;padding:0;margin:0}
-li.b{display:flex;gap:.75rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);border-radius:8px}
-li.b:hover{background:var(--hover)}
-li.b>div>a:first-child{font-weight:500}
-.fav{width:16px;height:16px;margin-top:.3rem;flex:none}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:1rem;min-height:2rem;margin:.25rem 0 .9rem}.toolbar p{margin:0}
+.seg{display:flex;gap:.25rem}
+.vt{background:transparent;color:var(--mut);border-color:var(--line);padding:.25rem .65rem;font-size:13px;font-weight:500}
+.vt[aria-pressed=true]{background:var(--chip);color:var(--fg)}
+.bento{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));grid-auto-flow:dense;grid-auto-rows:minmax(132px,auto);gap:14px}
+.card{position:relative;display:flex;flex-direction:column;gap:.5rem;padding:1rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);animation:rise .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:calc(var(--i)*40ms)}
+.card.feat{grid-column:span 2}
+.card.tall{grid-row:span 2}
+@media(max-width:640px){.bento{grid-template-columns:1fr}.card.feat{grid-column:auto}.card.tall{grid-row:auto}}
+.card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--acc) 45%,var(--line));box-shadow:0 10px 28px color-mix(in srgb,var(--acc) 12%,transparent)}
+.card:focus-within{border-color:var(--acc)}
+.top{display:flex;align-items:center;gap:.5rem;min-width:0}
+.fav{width:16px;height:16px;flex:none;border-radius:var(--r)}
+.dom,.when{font-family:var(--mono);font-size:12px;color:var(--mut)}
+.dom{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .t{font-weight:650;letter-spacing:-.015em;line-height:1.3;color:var(--fg);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card .t:hover{color:var(--acc);text-decoration:none}
+.note{margin:0;color:var(--mut);font-size:13px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.foot{margin-top:auto;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:12px}
+.foot .edit{margin-left:auto;color:var(--mut)}
+.tg{background:var(--chip);color:var(--acc);border-radius:var(--r);padding:.05rem .5rem;font-size:12px;font-weight:500}
+html[data-view=list] .bento{display:block}
+html[data-view=list] .card{flex-direction:row;flex-wrap:wrap;align-items:center;gap:.9rem;padding:.6rem .4rem;background:transparent;border-width:0 0 1px;border-radius:0;animation:none}
+html[data-view=list] .card .top{width:11rem}
+html[data-view=list] .card .t{flex:1;-webkit-line-clamp:1}
+html[data-view=list] .card .note{display:none}
+html[data-view=list] .card .foot{margin:0}
+@media(max-width:640px){html[data-view=list] .card .top{width:100%}html[data-view=list] .card .t{flex-basis:100%;-webkit-line-clamp:2}html[data-view=list] .card .foot{width:100%}}
 .meta{color:var(--mut);font-size:13px}.meta a{color:inherit}.meta a:hover{color:var(--acc)}
 .dead{color:var(--bad);font-weight:600;font-size:12px}
-aside{max-height:80vh;overflow:auto;font-size:13px}aside li{padding:.15rem 0}aside a.on{color:var(--fg);font-weight:600}
+aside{position:sticky;top:5rem;max-height:calc(100vh - 6rem);overflow:auto;font-size:13px}aside li{padding:.15rem 0}aside a.on{color:var(--fg);font-weight:600}
 label{display:block;margin:.9rem 0 .25rem;font-weight:600;font-size:13px}
-form.edit input[type=text],textarea{width:100%;box-sizing:border-box}
-footer{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px}footer a{color:inherit}
+form.edit input[type=text],textarea{width:100%}
 .add{display:flex;gap:.5rem;margin-bottom:1rem}.add input{flex:1}
-mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:3px;padding:0 .1rem}
+mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:var(--r);padding:0 .1rem}
 form.inline{display:inline}form.inline button{padding:.1rem .5rem;font-size:13px}
-.flash{background:var(--chip);border-left:3px solid var(--acc);padding:.5rem .75rem;border-radius:8px}
+.flash{background:var(--chip);border-left:3px solid var(--acc);padding:.5rem .75rem;border-radius:var(--r)}
 .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
-.chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:999px;padding:.15rem .65rem;font-size:13px}
+.chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:var(--r);padding:.15rem .65rem;font-size:13px;font-weight:500}
 .chip.on{background:var(--acc);color:var(--on-acc)}
-.empty{border:1px dashed var(--line);border-radius:12px;padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}
 form[action$="/delete"] button{background:transparent;color:var(--bad);border-color:var(--bad)}
 .meta,aside{font-variant-numeric:tabular-nums}
-button,.chip,a,li.b{transition:background-color .15s,color .15s,border-color .15s,transform .15s}
+#palette{width:min(560px,92vw);margin:12vh auto 0;padding:0;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 24px 60px color-mix(in srgb,var(--fg) 25%,transparent)}
+#palette::backdrop{background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(3px)}
+#pal-q{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:.95rem 1rem;font-size:16px;background:transparent;outline:none}
+#pal-list{max-height:50vh;overflow:auto;padding:.35rem}
+#pal-list a{display:block;padding:.55rem .75rem;color:var(--fg);border-radius:var(--r)}
+#pal-list a[aria-selected=true]{background:var(--hover);box-shadow:inset 3px 0 0 var(--acc);text-decoration:none}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+button,.chip,a,.card{transition:background-color .15s,color .15s,border-color .15s,box-shadow .2s,transform .2s cubic-bezier(.16,1,.3,1)}
 button:active,.chip:active{transform:scale(.98)}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}button:active,.chip:active{transform:none}}
-.skip{position:absolute;left:-999px;top:0}.skip:focus{left:.75rem;top:.75rem;background:var(--acc);color:var(--on-acc);padding:.4rem .7rem;border-radius:8px;z-index:1}`;
+.card:active{transform:scale(.995)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}button:active,.chip:active,.card:hover,.card:active{transform:none}}
+.skip{position:absolute;left:-999px;top:0}.skip:focus{left:.75rem;top:.75rem;background:var(--acc);color:var(--on-acc);padding:.4rem .7rem;border-radius:var(--r);z-index:30}`;
 // The brand mark (docs/brand/brand-board.html is the design source): four ink tally strokes and a moss ribbon,
 // so it reads as a hand tally and as a bookmark ribbon at once. Ink follows the text colour, the ribbon the accent.
 const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
-const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6f5e'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
+const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 
+const paletteTags = () => JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c').replace(/'/g, '\\u0027').replace(/&/g, '\\u0026');
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
 <meta name=description content="Your personal bookmark archive: saved pages, tags, notes and full-text search on your own machine.">
-<meta name=theme-color content="#fbfaf7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#131412" media="(prefers-color-scheme: dark)">
+<meta name=theme-color content="#f3f6f7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#0a1013" media="(prefers-color-scheme: dark)">
+<script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
 <link rel=icon href="${FAVICON}"><style>${CSS}</style>
 ${h`<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>
-<form action="/" role=search><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button>Search</button></form></header>
+<form action="/" role=search><div class=field><input type=search name=q value="${q}" placeholder="Search title, note, page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button type=button class=kbd id=open-palette aria-label="Open command palette">Ctrl K</button></div><button>Search</button></form></header>
 <main id=main>${body}</main>
 <footer><a href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a> (drag to bookmarks bar, <a href="/bookmarklet">help</a>) ·
 <a href="/import">Import</a> · Export <a href="/export?format=json">JSON</a> <a href="/export?format=csv">CSV</a> ${jobsHtml()}</footer>
-<script>document.addEventListener('keydown',e=>{const t=e.target.tagName;if(e.key==='/'&&t!=='INPUT'&&t!=='TEXTAREA'){e.preventDefault();document.querySelector('input[name=q]').focus()}})</script>`.s}`;
+<dialog id=palette aria-label="Command palette"><input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
+<script>(()=>{
+const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save'),openBtn=doc.getElementById('open-palette');
+const ACTIONS=[['Import bookmarks','/import'],['Manage tags','/tags'],['Dead links','/?dead=1'],['Save button (bookmarklet)','/bookmarklet'],['Export JSON','/export?format=json'],['Export CSV','/export?format=csv'],['Home','/']];
+if(openBtn&&/Mac|iPhone|iPad/.test(navigator.platform||''))openBtn.textContent='⌘ K';
+const isOpen=()=>dlg.open||dlg.hasAttribute('open');
+const isUrl=v=>{if(v.includes(' '))return false;try{const u=new URL(v.startsWith('http://')||v.startsWith('https://')?v:'https://'+v);return u.hostname.includes('.')}catch(e){return false}};
+let items=[],sel=0;
+const build=v=>{const t=v.trim(),s=t.toLowerCase(),out=[];
+  if(t&&isUrl(t))out.push({l:'Save '+t,save:t});
+  if(t)out.push({l:'Search for "'+t+'"',h:'/?q='+encodeURIComponent(t)});
+  for(const [l,h] of ACTIONS)if(!s||l.toLowerCase().includes(s))out.push({l,h});
+  for(const g of T)if(!s||g.includes(s))out.push({l:'#'+g,h:'/?tag='+encodeURIComponent(g)});
+  return out.slice(0,12)};
+const save=u=>{saveForm.elements.url.value=u;saveForm.requestSubmit()};
+const render=()=>list.replaceChildren(...items.map((it,i)=>{const li=doc.createElement('li'),a=doc.createElement('a');a.textContent=it.l;a.setAttribute('href',it.h||'#');a.tabIndex=-1;if(i===sel)a.setAttribute('aria-selected','true');a.addEventListener('click',e=>{if(it.save){e.preventDefault();save(it.save)}});li.append(a);return li}));
+const update=()=>{items=build(q.value);sel=0;render()};
+const open=()=>{if(dlg.showModal){if(!dlg.open)dlg.showModal()}else dlg.setAttribute('open','');q.value='';update();q.focus()};
+q.addEventListener('input',update);
+q.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%Math.max(items.length,1);render()}
+  else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+items.length)%Math.max(items.length,1);render()}
+  else if(e.key==='Enter'){e.preventDefault();list.querySelector('[aria-selected=true]')?.click()}});
+dlg.addEventListener('click',e=>{if(e.target===dlg&&dlg.close)dlg.close()});
+if(openBtn)openBtn.addEventListener('click',open);
+doc.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();return}
+  const tag=e.target.tagName;
+  if(isOpen()||tag==='INPUT'||tag==='TEXTAREA'||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='/'){e.preventDefault();doc.querySelector('input[name=q]').focus();return}
+  const cards=[...doc.querySelectorAll('.card a.t')],i=cards.indexOf(doc.activeElement);
+  if(e.key==='j'){e.preventDefault();cards[Math.min(i+1,cards.length-1)]?.focus()}
+  else if(e.key==='k'){e.preventDefault();cards[Math.max(i-1,0)]?.focus()}
+  else if(e.key==='e'&&i>=0){e.preventDefault();cards[i].closest('.card').querySelector('a.edit')?.click()}});
+const vt=[...doc.querySelectorAll('.vt')];
+const sync=()=>vt.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===root.dataset.view)));
+vt.forEach(b=>b.addEventListener('click',()=>{root.dataset.view=b.dataset.view;try{localStorage.setItem('marks-view',b.dataset.view)}catch(e){}sync()}));
+sync();
+})()</script>`.s}`;
 
 // ---------- app ----------
 const app = express();
@@ -323,17 +402,18 @@ app.get('/', (req, res) => {
     for (const b of rows) b.snippet = snip.get(b.id);
   }
   const toggle = t => (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]).join(',');
-  const item = b => h`<li class=b>
-    <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}">
-    <div><a href="${b.url}">${b.title || b.url}</a> ${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}
-    <div class=meta>${domain(b.url)} ${b.tags.map(t => h`· <a href="/${qs({ tag: t })}">#${t}</a> `)}· <span title="${date(b.saved_at)}">${ago(b.saved_at)}</span> · <a href="/b/${b.id}${backParam}">edit</a></div>
-    ${b.snippet && h`<div class=meta>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</div>`}
-    ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
+  const item = (b, i) => h`<li class="card${i === 0 && pg === 1 ? ' feat' : ''}${b.note || b.snippet ? ' tall' : ''}" style="--i:${Math.min(i, 14)}">
+    <div class=top><img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}"><span class=dom>${domain(b.url)}</span>${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}</div>
+    <a class="t" href="${b.url}">${b.title || b.url}</a>
+    ${b.snippet && h`<p class=note>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</p>`}
+    ${b.note && h`<p class=note>${b.note}</p>`}
+    <div class=foot>${b.tags.map(t => h`<a class=tg href="/${qs({ tag: t })}">#${t}</a>`)}<span class=when title="${date(b.saved_at)}">${ago(b.saved_at)}</span><a class=edit href="/b/${b.id}${backParam}">edit</a></div></li>`;
   res.send(page('marks', h`<div class=layout>
     <section><form method=post action="/save" class=add><input type=text name=url placeholder="Paste a URL to save" required><button>Save</button></form>
     ${ok && h`<p class=flash role=status>${ok}${req.query.ok === 'deleted' && undo.item && Date.now() - undo.item.at < UNDO_MS && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</p>`}
-    ${filtered && h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>`}
-    <ul>${rows.map(item)}</ul>
+    <div class=toolbar>${filtered ? h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>` : h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}</p>`}
+      <div class=seg role=group aria-label="View"><button type=button class=vt data-view=cards aria-pressed=true>Cards</button><button type=button class=vt data-view=list aria-pressed=false>List</button></div></div>
+    <ul class=bento>${rows.map(item)}</ul>
     ${empty && h`<div class=empty><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>

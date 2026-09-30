@@ -17,9 +17,8 @@ test('brand: light editorial, tally mark, serif wordmark', async t => {
     assert.match(html, /<a href="\/" class=brand><svg class=mark [^>]*aria-hidden=true/);
     assert.ok(html.includes(STROKES) && html.includes(RIBBON), 'mark paths');
     assert.match(html, /<span class=wordmark>marks<\/span>/);
-    assert.match(css, /--serif:[^;}]*Iowan Old Style[^;}]*Georgia[^;}]*serif/);
-    assert.match(css, /\.wordmark\{[^}]*font-family:var\(--serif\)/);
-    assert.match(css, /h2,h3\{[^}]*font-family:var\(--serif\)/);
+    assert.match(css, /\.wordmark\{[^}]*font-family:var\(--sans\)/);
+    assert.doesNotMatch(css, /(?<!sans-)serif/, 'no serif anywhere');
   });
 
   await t.test('the favicon is the same mark', () => {
@@ -33,9 +32,10 @@ test('brand: light editorial, tally mark, serif wordmark', async t => {
 
   await t.test('brand board is self-contained and uses the app\'s mark, palette and tagline', () => {
     assert.ok(board.includes(STROKES) && board.includes(RIBBON), 'same mark paths as the app');
-    for (const hex of ['#fbfaf7', '#1d1d1a', '#2f6f5e', '#131412', '#6fbfa6']) assert.ok(board.toLowerCase().includes(hex), hex);
+    for (const hex of ['#f3f6f7', '#0d1a1f', '#147863', '#0a1013', '#3fe0bd']) assert.ok(board.toLowerCase().includes(hex), hex);
     assert.match(board.replace(/<[^>]+>/g, ''), /Keep your place\./); // visible text; the board colours "place." with <em>
-    assert.match(board, /Iowan Old Style/);
+    assert.match(board, /Segoe UI Variable/);
+    assert.doesNotMatch(board, /Iowan Old Style|Georgia/, 'the board no longer uses a serif');
     assert.doesNotMatch(board, /(src|href)="https?:|@import|url\(\s*['"]?https?:/i, 'no external resources');
   });
 });

@@ -37,3 +37,11 @@ Saving is instant: the server stores the URL right away and fetches the page in 
 ## Brand
 
 The look is defined in `docs/brand/brand-board.html` (open it in a browser): light editorial, paper / ink / moss, a tally-mark logo (four strokes and a ribbon), a local serif for the name and headings, system sans for everything else, light first with dark following the system. The app's header mark, favicon and palette use the same paths and hex values; `test-brand.js` keeps the two in sync.
+
+## Look and shortcuts
+
+Cool slate neutrals with one mint-teal accent, a heavy local sans (no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion.
+
+- `Ctrl`/`Cmd` + `K`: command palette (search, jump to a tag, open Import or Tags, or paste a URL to save it)
+- `/`: focus the search box
+- `j` / `k`: move through bookmarks, `Enter` opens, `e` edits

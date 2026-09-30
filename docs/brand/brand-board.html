@@ -5,10 +5,9 @@
 <title>marks: brand board</title>
 <style>
 /* Brand board for "marks". Source of truth for the mark and palette; the app (server.js) uses the same paths and hex values.
-   Direction (decided by Jev): light editorial, paper / ink / moss, local serif + system sans, light first, dark follows. */
+   Direction (decided by Jev): modern and cool, mist / ink / mint, heavy local sans with mono meta, light first, dark follows. */
 :root{
-  --paper:#fbfaf7; --ink:#1d1d1a; --moss:#2f6f5e; --grey:#6d6c66; --rule:#e6e4dd; --canvas:#e9e7e0;
-  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --paper:#f3f6f7; --ink:#0d1a1f; --moss:#147863; --grey:#52626a; --rule:#d9e2e5; --canvas:#e3eaec;
   --sans:"Segoe UI Variable Text","Segoe UI Variable","SF Pro Text",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
@@ -20,7 +19,7 @@ body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.5 var(--sans
 .foot{position:absolute;left:5%;bottom:5%;right:5%;display:flex;justify-content:space-between;font:11px var(--sans);color:var(--grey)}
 svg{display:block}
 .mark-ink{stroke:var(--ink)} .ribbon{fill:var(--moss)}
-.wordmark{font-family:var(--serif);font-weight:600;letter-spacing:-.03em;line-height:1}
+.wordmark{font-family:var(--sans);font-weight:750;letter-spacing:-.045em;line-height:1}
 
 /* 01 cover */
 .cover{gap:clamp(16px,3vw,32px)} .cover .wordmark{font-size:clamp(44px,8vw,88px)}
@@ -39,16 +38,16 @@ svg{display:block}
 .btn{background:var(--moss);color:#fff;border-radius:7px;padding:4px 10px;font:600 11px var(--sans)}
 .row{padding:7px 4px;border-bottom:1px solid var(--rule)} .row b{font:500 12px var(--sans);color:var(--moss)}
 .row small{display:block;font:11px var(--sans);color:var(--grey)}
-.chip{display:inline-block;background:#efede6;border-radius:99px;padding:0 7px;margin-right:4px;font:11px var(--sans);color:var(--ink)}
+.chip{display:inline-block;background:#e4edef;border-radius:99px;padding:0 7px;margin-right:4px;font:11px var(--sans);color:var(--ink)}
 .chip.on{background:var(--moss);color:#fff}
 /* 04 essence */
 .essence{gap:clamp(10px,1.8vw,18px);padding:13% 6% 12%}
-.tag{font:600 clamp(26px,4.2vw,46px)/1.05 var(--serif);letter-spacing:-.025em;text-align:center;text-wrap:balance}
+.tag{font:600 clamp(26px,4.2vw,46px)/1.05 var(--sans);letter-spacing:-.025em;text-align:center;text-wrap:balance}
 .tag em{color:var(--moss);font-style:italic}
 .sw{display:flex;gap:8px} .sw div{width:clamp(30px,5vw,48px);aspect-ratio:1;border-radius:8px;position:relative}
 .sw span{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font:9px var(--sans);color:var(--grey);white-space:nowrap}
 .sw.light{margin-bottom:6px} .type{font:12px var(--sans);color:var(--grey);text-align:center}
-.type b{font:600 22px var(--serif);color:var(--ink);margin-right:6px}
+.type b{font:600 22px var(--sans);color:var(--ink);margin-right:6px}
 </style>
 <body>
 <main class="board">
@@ -103,19 +102,19 @@ svg{display:block}
     <div class="tag">Keep your <em>place.</em></div>
     <div>
       <div class="sw light" aria-label="Light theme colours">
-        <div style="background:#fbfaf7;box-shadow:inset 0 0 0 1px var(--rule)"><span title="paper">#fbfaf7</span></div>
-        <div style="background:#1d1d1a"><span title="ink">#1d1d1a</span></div>
-        <div style="background:#2f6f5e"><span title="moss">#2f6f5e</span></div>
-        <div style="background:#6d6c66"><span title="grey">#6d6c66</span></div>
+        <div style="background:#f3f6f7;box-shadow:inset 0 0 0 1px var(--rule)"><span title="mist">#f3f6f7</span></div>
+        <div style="background:#0d1a1f"><span title="ink">#0d1a1f</span></div>
+        <div style="background:#147863"><span title="moss">#147863</span></div>
+        <div style="background:#52626a"><span title="slate">#52626a</span></div>
       </div>
       <div class="sw" style="margin-top:22px" aria-label="Dark theme colours">
-        <div style="background:#131412"><span title="night">#131412</span></div>
-        <div style="background:#ecebe6"><span title="page">#ecebe6</span></div>
-        <div style="background:#6fbfa6"><span title="moss">#6fbfa6</span></div>
-        <div style="background:#9a9990"><span title="grey">#9a9990</span></div>
+        <div style="background:#0a1013"><span title="night">#0a1013</span></div>
+        <div style="background:#e7f0f2"><span title="page">#e7f0f2</span></div>
+        <div style="background:#3fe0bd"><span title="moss">#3fe0bd</span></div>
+        <div style="background:#8fa2a9"><span title="grey">#8fa2a9</span></div>
       </div>
     </div>
-    <p class="type" style="margin:14px 0 0"><b>Aa</b> Iowan Old Style + system sans</p>
+    <p class="type" style="margin:14px 0 0"><b>Aa</b> System sans, mono for meta</p>
     <span class="foot"><span>light first, dark follows</span><span>local fonts only</span></span>
   </section>
 
