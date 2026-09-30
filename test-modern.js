@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
-const { setup } = require('./test-helpers');
+const { setup, bare } = require('./test-helpers');
 
 test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
   const s = await setup(t);
@@ -42,7 +42,7 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
   });
 
   await t.test('Ctrl+K command palette: filters, searches, jumps to tags, saves a URL', () => {
-    assert.match(html, /<button type=button class=kbd id=open-palette/);
+    assert.match(html, /<a class=searchbtn id=open-palette href="\/" aria-label="Search bookmarks">/);
     const dom = open(), win = dom.window, d = win.document;
     const dlg = d.getElementById('palette'), inp = d.getElementById('pal-q');
     key(win, d, 'k', { ctrlKey: true });
@@ -93,7 +93,7 @@ test('modern UI: bento, toggle, palette, keyboard, motion', async t => {
     assert.match(html, /<h3>Tags <span class=n>1<\/span><\/h3>/);
     assert.match(html, /<div class=cloud><a href="\/\?tag=reading" class="tc">#reading <span class=n>1<\/span><\/a><\/div>/);
     assert.match(html, /<a class=more href="\/tags">Manage tags<\/a>/);
-    assert.match(html, /<section class=side><h3>Status<\/h3><a class="stat" href="\/\?dead=1"><span>Dead links<\/span><span class="badge">0<\/span><\/a><\/section>/);
+    assert.match(bare(html), /<section class=side><h3>Status<\/h3><a class="stat" href="\/\?dead=1"><span>Dead links<\/span><span class="badge">0<\/span><\/a><div class=jobs><form method=post action="\/check" class=inline><button>Check links now<\/button><\/form><form method=post action="\/archive" class=inline><button>Archive \d+ pages<\/button><\/form><\/div><\/section>/);
   });
 
   await t.test('CSS: sidebar panels, chips with active state, badge', () => {

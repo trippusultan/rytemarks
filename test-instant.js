@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup } = require('./test-helpers');
+const { setup, bare } = require('./test-helpers');
 
 test('instant save', async t => {
   let release;
@@ -16,7 +16,7 @@ test('instant save', async t => {
     assert.match(r.headers.get('location'), /^\/b\/\d+\?new=1$/);
     assert.equal(row(s.fake + '/slow').title, '');
     assert.equal(row(s.fake + '/slow').archived_at, null);
-    assert.match(await s.get(r.headers.get('location')), /Saved ✓/);
+    assert.match(bare(await s.get(r.headers.get('location'))), /role=status> Saved /);
   });
 
   await t.test('a title typed meanwhile survives the fetch', async () => {

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup } = require('./test-helpers');
+const { setup, bare } = require('./test-helpers');
 
 const lum = hex => {
   const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
@@ -23,7 +23,7 @@ test('glow: hero stats, ambient light, glass, type scale, grain', async t => {
   const css = /<style>([\s\S]*?)<\/style>/.exec(html)[1];
 
   await t.test('hero: a display heading over four live stat tiles with real numbers', () => {
-    assert.match(html, /<section class=hero aria-label="Library overview"><h1>Your library<\/h1><div class=stats><a class=tile style="--i:0" href="\/"><b class=big>4<\/b><span>Saved<\/span><\/a><div class=tile style="--i:1"><b class=big>2<\/b><span>This week<\/span><\/div><a class=tile style="--i:2" href="\/tags"><b class=big>2<\/b><span>Tags<\/span><\/a><a class="tile bad" style="--i:3" href="\/\?dead=1"><b class=big>1<\/b><span>Dead links<\/span><\/a><\/div><\/section>/);
+    assert.match(bare(html), /<section class=hero aria-label="Library overview"><h1>Your library<\/h1><div class=stats><a class=tile style="--i:0" href="\/"><span class=ti><\/span><b class=big>4<\/b><span>Saved<\/span><\/a><div class=tile style="--i:1"><span class=ti><\/span><b class=big>2<\/b><span>This week<\/span><\/div><a class=tile style="--i:2" href="\/tags"><span class=ti><\/span><b class=big>2<\/b><span>Tags<\/span><\/a><a class="tile bad" style="--i:3" href="\/\?dead=1"><span class=ti><\/span><b class=big>1<\/b><span>Dead links<\/span><\/a><\/div><\/section>/);
   });
 
   await t.test('hero: hidden when filtering, searching, viewing dead links, or when the archive is empty', async () => {

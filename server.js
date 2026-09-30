@@ -178,7 +178,7 @@ const background = (name, fn) => {
   return true;
 };
 const jobsHtml = () => busy ? h`<span>${busy} running…</span>`
-  : h`<form method=post action="/check" class=inline><button>Check links now</button></form>${pending() > 0 && h`<form method=post action="/archive" class=inline><button>Archive ${pending()} pages</button></form>`}`;
+  : h`<form method=post action="/check" class=inline><button>${ic('arrow-clockwise')}Check links now</button></form>${pending() > 0 && h`<form method=post action="/archive" class=inline><button>${ic('archive')}Archive ${pending()} pages</button></form>`}`;
 
 // Netscape export: <DT><A HREF ADD_DATE TAGS>title</A> [<DD>note]. Only http(s) links survive.
 function parseNetscape(html) {
@@ -245,24 +245,30 @@ a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 header{position:sticky;top:0;z-index:20;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding:.7rem max(1.25rem,calc((100vw - 1200px)/2));background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line)}
 @media(prefers-reduced-transparency:reduce){header{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
 main{width:100%;flex:1;max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
-footer{max-width:1200px;width:100%;margin:0 auto;padding:1.5rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1.5rem 2rem;align-items:start}footer a{color:inherit}
-@media(max-width:700px){footer{grid-template-columns:1fr}}
-.fz h3{margin:0 0 .6rem;font-size:13px;color:var(--fg);letter-spacing:-.01em}.fz p{margin:0 0 .35rem}
-.about a{color:var(--acc);font-weight:500}
-.fl,.jobs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.25rem}.jobs{gap:.5rem}
+footer{max-width:1200px;width:100%;margin:0 auto;padding:1.25rem 1.25rem 2.5rem;border-top:1px solid var(--line);color:var(--mut);font-size:13px;display:flex;flex-direction:column;gap:.6rem}footer a{color:inherit}
+.fbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem 1.5rem}
+.fl2{display:flex;align-items:center;gap:.6rem;color:var(--fg)}.fl2 .mark{width:20px;height:15px}
+.fl2 a{display:inline-flex;align-items:center;gap:.3rem;color:var(--acc);font-weight:500}
+.fr2{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.1rem}.fr2 a{display:inline-flex;align-items:center;gap:.35rem}
+.fine{margin:0;font-size:12px}
+.jobs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}.side .jobs{margin-top:.75rem}
 .drag{padding:.25rem .6rem;border:1px dashed var(--line);border-radius:var(--r);color:var(--fg);cursor:grab}
 .drag:hover{border-color:var(--acc);color:var(--acc);text-decoration:none}
 .brand{display:flex;align-items:center;gap:.55rem;color:var(--fg)}.brand:hover{text-decoration:none}
 .mark{display:block}
 .wordmark{font-family:var(--sans);font-size:1.5rem;font-weight:750;letter-spacing:-.045em;line-height:1}
 .tagline{font-weight:650;font-size:1.15rem;letter-spacing:-.02em;color:var(--acc);margin:.25rem 0 .75rem}
-header nav{display:flex;gap:.15rem;align-items:center}
-header nav a{padding:.4rem .75rem;border-radius:var(--r);color:var(--mut);font-weight:500;white-space:nowrap}
-header nav a:hover{background:var(--hover);color:var(--fg);text-decoration:none}
-header nav a[aria-current=page]{color:var(--fg);background:var(--chip);box-shadow:inset 0 -2px 0 var(--acc)}
-@media(max-width:640px){header nav{order:3;width:100%;overflow-x:auto}}
-header form{flex:1;display:flex;gap:.5rem;min-width:14rem;align-items:center}
-@media(max-width:640px){header{position:static}header form{min-width:0}}
+.topnav{display:flex;gap:.15rem;align-items:center;margin-right:auto}
+.topnav a{display:flex;align-items:center;gap:.45rem;padding:.4rem .75rem;border-radius:var(--r);color:var(--mut);font-weight:500;white-space:nowrap}
+.topnav a:hover{background:var(--hover);color:var(--fg);text-decoration:none}
+.topnav a[aria-current=page]{color:var(--fg);background:var(--chip);box-shadow:inset 0 -2px 0 var(--acc)}
+.hactions{display:flex;align-items:center;gap:.5rem}
+.searchbtn{display:flex;align-items:center;gap:.5rem;min-width:13rem;padding:.4rem .6rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--mut)}
+.searchbtn:hover{border-color:var(--acc);color:var(--fg);text-decoration:none}.searchbtn .lbl{flex:1}
+.tabbar{display:none}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.35rem .25rem;border-radius:var(--r);color:var(--mut);font-size:11px;font-weight:500}
+.tabbar a:hover{text-decoration:none;color:var(--fg)}.tabbar a[aria-current=page]{color:var(--acc)}
+.tabbar .tabadd{color:var(--on-acc);background:var(--acc)}.tabbar .ic{font-size:1.35em}
 .field{display:flex;flex:1;align-items:center;gap:.4rem;padding-right:.4rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .field:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 .field input{flex:1;border:0;background:transparent;outline:none}
@@ -368,8 +374,8 @@ a.tile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));text-dec
 .tg.lg{align-self:flex-start;padding:.15rem .6rem;font-size:15px}
 summary{cursor:pointer;list-style:none;color:var(--mut);font-size:13px}summary::-webkit-details-marker{display:none}
 summary:hover{color:var(--acc)}details[open]>summary{color:var(--fg)}
-summary::before{content:"›";display:inline-block;width:1em;transition:transform .15s}
-details[open]>summary::before{transform:rotate(90deg)}
+summary{display:flex;align-items:center;gap:.35rem}summary .ic{transition:transform .15s}
+details[open]>summary .ic{transform:rotate(90deg)}
 .hint{margin:.4rem 0;color:var(--mut);font-size:12.5px}
 .tedit form{display:grid;gap:.25rem;margin-top:.6rem}.tedit form label{margin:.2rem 0 0}.tedit form button{justify-self:start}
 details.del{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--line)}
@@ -396,6 +402,20 @@ details.del{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--line
 @media(max-width:820px){.edit-layout{grid-template-columns:1fr}}
 .dcard dl{display:grid;gap:.7rem;margin:.8rem 0 0}.dcard dt{color:var(--mut);font-size:12px}.dcard dd{margin:0;overflow-wrap:anywhere}
 .msg{max-width:36rem}.msg-search{display:flex;gap:.5rem;margin:1rem 0}.msg-search input{flex:1}.links{display:flex;gap:1.25rem}
+.ic{width:1.15em;height:1.15em;fill:currentColor;flex:none;vertical-align:-.22em}
+button{display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
+.btn.addbtn{display:inline-flex;align-items:center;gap:.4rem}
+.field .ic,.add>.ic{color:var(--mut)}.field .ic{margin-left:.65rem}.add>.ic{margin-right:-.15rem}
+.bar2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}.bar2 .add{margin-bottom:0}.bar2 .field{padding-right:0}
+.palrow{display:flex;align-items:center;gap:.6rem;padding-left:1rem;border-bottom:1px solid var(--line);color:var(--mut)}.palrow #pal-q{border-bottom:0}
+.ti{display:flex;color:var(--acc);font-size:1.25rem}.tile.bad .ti{color:var(--bad)}
+.ei{display:block;margin-bottom:.4rem;color:var(--acc);font-size:2rem;line-height:1}
+.drop-i{color:var(--acc);font-size:2rem;line-height:1}
+.tick{display:flex}.tick .ic{width:1.3em;height:1.3em}
+.dead{display:inline-flex;align-items:center;gap:.25rem}
+a.edit{display:inline-flex;padding:.15rem}a.edit:hover{color:var(--acc)}
+@media(max-width:640px){.topnav{display:none}.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);gap:.25rem;padding:.35rem .6rem calc(.35rem + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-top:1px solid var(--line)}body{padding-bottom:4.5rem}.toast{bottom:calc(4.75rem + env(safe-area-inset-bottom))}.searchbtn{min-width:0;margin-left:auto}.searchbtn .lbl,.searchbtn .kbd{display:none}.btn.addbtn{display:none}.bar2{grid-template-columns:1fr}}
+@media(prefers-reduced-transparency:reduce){.tabbar{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 button,.chip,a,.card{transition:background-color .15s,color .15s,border-color .15s,box-shadow .2s,transform .2s cubic-bezier(.16,1,.3,1)}
 button:active,.chip:active{transform:scale(.98)}
@@ -407,12 +427,18 @@ button:active,.chip:active{transform:scale(.98)}
 const MARK_SVG = `<svg class=mark viewBox="0 0 44 32" width=26 height=19 aria-hidden=true focusable=false><path d="M5 5v22M13 5v22M21 5v22M29 5v22" fill=none stroke=currentColor stroke-width=4 stroke-linecap=round /><path d="M34 3h8v26l-4-4-4 4z" fill="var(--acc)" /></svg>`;
 const FAVICON = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23147863'/%3E%3Cpath d='M8 8v16M13 8v16M18 8v16' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 6h5v20l-2.5-3-2.5 3z' fill='%23fff'/%3E%3C/svg%3E`;
 
+// Icons: Phosphor (MIT), copied into icons.js and shipped as ONE inline sprite on every page (no requests, no runtime dependency).
+const ICONS = require('./icons');
+const ic = name => { if (!ICONS[name]) throw new Error('unknown icon: ' + name); return raw(`<svg class=ic aria-hidden=true focusable=false><use href="#i-${name}"/></svg>`); };
+const SPRITE = `<svg width=0 height=0 style="position:absolute" aria-hidden=true focusable=false>${Object.entries(ICONS).map(([n, inner]) => `<symbol id="i-${n}" viewBox="0 0 256 256">${inner}</symbol>`).join('')}</svg>`;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 // Shared header block for every sub page: a large tight title, one plain sentence, an optional primary action.
 const pageHead = (title, lede, action) => h`<div class=ph><div><h1>${title}</h1>${lede && h`<p class=lede>${lede}</p>`}</div>${action && h`<div class=act>${action}</div>`}</div>`;
 const messagePage = (res, status, title, body) => res.status(status).send(page(title, h`${pageHead(title)}<div class=msg>${body}<form action="/" role=search class=msg-search><label class=sr for=msg-q>Search your bookmarks</label><input id=msg-q type=search name=q placeholder="Search bookmarks"><button>Search</button></form><p class=links><a href="/">Back to your bookmarks</a><a href="/tags">Tags</a></p></div>`));
-const NAV = [['home', '/', 'Bookmarks'], ['tags', '/tags', 'Tags'], ['import', '/import', 'Import']];
-const navHtml = cur => h`<nav aria-label="Primary">${NAV.map(([k, href, label]) => h`<a href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${label}</a>`)}</nav>`;
+const NAV = [['home', '/', 'Bookmarks', 'bookmarks-simple'], ['tags', '/tags', 'Tags', 'tag'], ['import', '/import', 'Import', 'tray-arrow-down']];
+const navHtml = cur => h`<nav aria-label="Primary" class=topnav>${NAV.map(([k, href, label, icon]) => h`<a href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${ic(icon)}<span>${label}</span></a>`)}</nav>`;
+// Phones: a fixed bottom tab bar (thumb reach). Add is a real link to the add field, so it also works without JavaScript.
+const tabHtml = cur => h`<nav aria-label="Tabs" class=tabbar>${[NAV[0], NAV[1], ['add', '/#add-url', 'Add', 'plus'], NAV[2]].map(([k, href, label, icon]) => h`<a${k === 'add' ? raw(' class=tabadd') : ''} href="${href}"${k === cur ? raw(' aria-current=page') : ''}>${ic(icon)}<span>${label}</span></a>`)}</nav>`;
 const paletteTags = () => JSON.stringify(allTags().map(t => t.tag)).replace(/</g, '\\u003c').replace(/'/g, '\\u0027').replace(/&/g, '\\u0026');
 const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
@@ -420,17 +446,17 @@ const page = (title, body, { q = '', tag = '', cur = '' } = {}) => `<!doctype ht
 <meta name=theme-color content="#f3f6f7" media="(prefers-color-scheme: light)"><meta name=theme-color content="#0a1013" media="(prefers-color-scheme: dark)">
 <script>try{document.documentElement.dataset.view=localStorage.getItem('marks-view')==='list'?'list':'cards'}catch(e){document.documentElement.dataset.view='cards'}</script>
 <link rel=icon href="${FAVICON}"><style>${CSS}</style>
-${h`<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>
-<form action="/" role=search><div class=field><input type=search name=q value="${q}" placeholder="Search bookmarks" aria-label="Search title, note and page text">${tag && h`<input type=hidden name=tag value="${tag}">`}<button type=button class=kbd id=open-palette aria-label="Open command palette">Ctrl K</button></div><button class=sr>Search</button></form>${navHtml(cur)}</header>
+${h`${raw(SPRITE)}<a class=skip href="#main">Skip to content</a><header><a href="/" class=brand>${raw(MARK_SVG)}<span class=wordmark>marks</span></a>${navHtml(cur)}<div class=hactions><a class=searchbtn id=open-palette href="/" aria-label="Search bookmarks">${ic('magnifying-glass')}<span class=lbl>Search</span><span class=kbd>Ctrl K</span></a><a class="btn addbtn" href="/#add-url">${ic('plus')}<span>Add</span></a></div></header>
 <main id=main>${body}</main>
-<footer><div class=fz><h3>Tools</h3><div class=fl><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">+ Save to marks</a><a href="/bookmarklet">Install help</a><a href="/import">Import</a><a href="/export?format=json">Export JSON</a><a href="/export?format=csv">Export CSV</a></div></div>
-<div class=fz><h3>Maintenance</h3><div class=jobs>${jobsHtml()}</div></div>
-<div class="fz about"><h3>About</h3><p>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">@trippusultan</a></p><p>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom.</p></div></footer>
-<dialog id=palette aria-label="Command palette"><input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
+<footer><div class=fbar><div class=fl2>${raw(MARK_SVG)}<span>Made by <a href="https://github.com/trippusultan" rel="noopener noreferrer">${ic('github-logo')}@trippusultan</a></span></div>
+<div class=fr2><a class=drag href="${raw(esc(BOOKMARKLET))}" title="Drag this to your bookmarks bar">${ic('plus')}Save to marks</a><a href="/bookmarklet">${ic('question')}Install help</a><a href="/export?format=json">${ic('download-simple')}Export JSON</a><a href="/export?format=csv">${ic('download-simple')}Export CSV</a></div></div>
+<p class=fine>Built on Node.js, Express, SQLite, Mozilla Readability, metascraper and jsdom. Icons by Phosphor (MIT).</p></footer>
+${tabHtml(cur)}
+<dialog id=palette aria-label="Command palette"><div class=palrow>${ic('magnifying-glass')}<input id=pal-q type=text placeholder="Search, jump to a tag, or paste a URL to save" autocomplete=off aria-label="Command palette"></div><ul id=pal-list role=listbox></ul><form id=pal-save method=post action="/save" hidden><input type=hidden name=url></form></dialog>
 <script>(()=>{
 const T=${raw(paletteTags())},doc=document,root=doc.documentElement,dlg=doc.getElementById('palette'),q=doc.getElementById('pal-q'),list=doc.getElementById('pal-list'),saveForm=doc.getElementById('pal-save'),openBtn=doc.getElementById('open-palette');
 const ACTIONS=[['Import bookmarks','/import'],['Manage tags','/tags'],['Dead links','/?dead=1'],['Save button (bookmarklet)','/bookmarklet'],['Export JSON','/export?format=json'],['Export CSV','/export?format=csv'],['Home','/']];
-if(openBtn&&/Mac|iPhone|iPad/.test(navigator.platform||''))openBtn.textContent='⌘ K';
+const kb=openBtn&&openBtn.querySelector('.kbd');if(kb&&/Mac|iPhone|iPad/.test(navigator.platform||''))kb.textContent='⌘ K';
 const isOpen=()=>dlg.open||dlg.hasAttribute('open');
 const isUrl=v=>{if(v.includes(' '))return false;try{const u=new URL(v.startsWith('http://')||v.startsWith('https://')?v:'https://'+v);return u.hostname.includes('.')}catch(e){return false}};
 let items=[],sel=0;
@@ -450,12 +476,15 @@ q.addEventListener('keydown',e=>{
   else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+items.length)%Math.max(items.length,1);render()}
   else if(e.key==='Enter'){e.preventDefault();list.querySelector('[aria-selected=true]')?.click()}});
 dlg.addEventListener('click',e=>{if(e.target===dlg&&dlg.close)dlg.close()});
-if(openBtn)openBtn.addEventListener('click',open);
+if(openBtn)openBtn.addEventListener('click',e=>{e.preventDefault();open()});
+const addField=doc.getElementById('add-url');
+doc.querySelectorAll('.addbtn,.tabadd').forEach(a=>a.addEventListener('click',e=>{if(addField){e.preventDefault();if(addField.scrollIntoView)addField.scrollIntoView({block:'center'});addField.focus()}}));
+if(addField&&location.hash==='#add-url')addField.focus();
 doc.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();return}
   const tag=e.target.tagName;
   if(isOpen()||tag==='INPUT'||tag==='TEXTAREA'||e.ctrlKey||e.metaKey||e.altKey)return;
-  if(e.key==='/'){e.preventDefault();doc.querySelector('input[name=q]').focus();return}
+  if(e.key==='/'){e.preventDefault();const qf=doc.querySelector('input[name=q]');if(qf)qf.focus();else open();return}
   const cards=[...doc.querySelectorAll('.card a.t')],i=cards.indexOf(doc.activeElement);
   if(e.key==='j'){e.preventDefault();cards[Math.min(i+1,cards.length-1)]?.focus()}
   else if(e.key==='k'){e.preventDefault();cards[Math.max(i-1,0)]?.focus()}
@@ -503,24 +532,24 @@ app.get('/', (req, res) => {
   }
   const toggle = t => (tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]).join(',');
   const item = (b, i) => h`<li class="card${i === 0 && pg === 1 ? ' feat' : ''}${b.note || b.snippet ? ' tall' : ''}" style="--i:${Math.min(i, 14)}">
-    <div class=top><img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}"><span class=dom>${domain(b.url)}</span>${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}</div>
+    <div class=top><img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}"><span class=dom>${domain(b.url)}</span>${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">${ic('link-break')}<span class=sr>404</span></span>`}</div>
     <a class="t" href="${b.url}">${b.title || b.url}</a>
     ${b.snippet && h`<p class=note>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</p>`}
     ${b.note && h`<p class=note>${b.note}</p>`}
-    <div class=foot>${b.tags.map(t => h`<a class=tg href="/${qs({ tag: t })}">#${t}</a>`)}<span class=when title="${date(b.saved_at)}">${ago(b.saved_at)}</span><a class=edit href="/b/${b.id}${backParam}">edit</a></div></li>`;
+    <div class=foot>${b.tags.map(t => h`<a class=tg href="/${qs({ tag: t })}">#${t}</a>`)}<span class=when title="${date(b.saved_at)}">${ago(b.saved_at)}</span><a class=edit href="/b/${b.id}${backParam}" aria-label="Edit ${b.title || b.url}">${ic('pencil-simple')}</a></div></li>`;
   const tagList = allTags(), deadCount = db.prepare('SELECT count(*) n FROM bookmarks WHERE status IN (404, 410)').get().n;
   const showHero = !filtered && !empty && pg === 1;
   const weekCount = showHero ? db.prepare('SELECT count(*) n FROM bookmarks WHERE saved_at >= ?').get(now() - 7 * 86400).n : 0;
-  res.send(page('marks', h`${showHero && h`<section class=hero aria-label="Library overview"><h1>Your library</h1><div class=stats><a class=tile style="--i:0" href="/"><b class=big>${total}</b><span>Saved</span></a><div class=tile style="--i:1"><b class=big>${weekCount}</b><span>This week</span></div><a class=tile style="--i:2" href="/tags"><b class=big>${tagList.length}</b><span>Tags</span></a><a class="tile${deadCount ? ' bad' : ''}" style="--i:3" href="/?dead=1"><b class=big>${deadCount}</b><span>Dead links</span></a></div></section>`}<div class=layout>
-    <section><form method=post action="/save" class=add><label class=sr for=add-url>Web address to save</label><input id=add-url type=text name=url inputmode=url autocomplete=off placeholder="Paste a URL to save" required><button>Save</button></form>
-    ${ok && h`<div class="toast${keepToast ? ' keep' : ''}" role=status><span class=tick>✓</span>${ok}${keepToast && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</div>`}
+  res.send(page('marks', h`${showHero && h`<section class=hero aria-label="Library overview"><h1>Your library</h1><div class=stats><a class=tile style="--i:0" href="/"><span class=ti>${ic('bookmarks-simple')}</span><b class=big>${total}</b><span>Saved</span></a><div class=tile style="--i:1"><span class=ti>${ic('calendar-blank')}</span><b class=big>${weekCount}</b><span>This week</span></div><a class=tile style="--i:2" href="/tags"><span class=ti>${ic('tag')}</span><b class=big>${tagList.length}</b><span>Tags</span></a><a class="tile${deadCount ? ' bad' : ''}" style="--i:3" href="/?dead=1"><span class=ti>${ic('link-break')}</span><b class=big>${deadCount}</b><span>Dead links</span></a></div></section>`}<div class=layout>
+    <section><div class=bar2><form action="/" role=search class=hsearch><div class=field>${ic('magnifying-glass')}<input type=search name=q value="${q}" placeholder="Search bookmarks" aria-label="Search title, note and page text">${tag && h`<input type=hidden name=tag value="${tag}">`}</div><button class=sr>Search</button></form><form method=post action="/save" class=add>${ic('plus')}<label class=sr for=add-url>Web address to save</label><input id=add-url type=text name=url inputmode=url autocomplete=off placeholder="Paste a URL to save" required><button>${ic('floppy-disk')}Save</button></form></div>
+    ${ok && h`<div class="toast${keepToast ? ' keep' : ''}" role=status><span class=tick>${ic('check-circle')}</span>${ok}${keepToast && h` <form method=post action="/undo" class=inline><button>Undo</button></form>`}</div>`}
     <div class=toolbar>${filtered ? h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}${q && h` matching “${q}”`}${tag && h` tagged ${tags.map(t => '#' + t).join(', ')}`}${dead && ' that look dead'} · <a href="/">clear</a></p>` : h`<p class=meta>${total} ${total === 1 ? 'bookmark' : 'bookmarks'}</p>`}
       <div class=seg role=group aria-label="View"><button type=button class=vt data-view=cards aria-pressed=true>Cards</button><button type=button class=vt data-view=list aria-pressed=false>List</button></div></div>
     <ul class=bento>${rows.map(item)}</ul>
-    ${empty && h`<div class=empty><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
+    ${empty && h`<div class=empty><span class=ei>${ic('bookmarks-simple')}</span><h3>Nothing saved yet</h3><p class=tagline>Keep your place.</p><ol><li>Drag the save button to your bookmarks bar (<a href="/bookmarklet">how</a>) and click it on any page.</li><li>Or paste a URL in the box above.</li><li>Or <a href="/import">import</a> a bookmarks export.</li></ol></div>`}
     ${!empty && !rows.length && h`<p class=meta>No matches. Try fewer words or <a href="/">clear the filter</a>.</p>`}
     ${pg > 1 && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg - 1 })}">← newer</a> `}${more && h`<a href="/${qs({ q, tag, dead: dead && '1', page: pg + 1 })}">older →</a>`}</section>
-    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a></section></aside></div>`, { q, tag, cur: 'home' }));
+    <aside aria-label="Tags and status"><section class=side><h3>Tags <span class=n>${tagList.length}</span></h3>${tagList.length ? h`<div class=cloud>${tagList.map(t => h`<a href="/${qs({ q, tag: toggle(t.tag), dead: dead && '1' })}" class="tc${tags.includes(t.tag) ? ' on' : ''}">#${t.tag} <span class=n>${t.n}</span></a>`)}</div>` : h`<p class=meta>No tags yet. Add some when you save a page.</p>`}<a class=more href="/tags">Manage tags</a></section><section class=side><h3>Status</h3><a class="stat" href="/?dead=1"><span>Dead links</span><span class="badge${deadCount ? ' bad' : ''}">${deadCount}</span></a><div class=jobs>${jobsHtml()}</div></section></aside></div>`, { q, tag, cur: 'home' }));
 });
 
 const badUrl = (res, given) => messagePage(res, 400, "Couldn't save that", given
@@ -537,14 +566,14 @@ app.get('/save', (req, res) => {
 
 app.get('/bookmarklet', (req, res) => res.send(page('Bookmarklet', h`${pageHead('Save button', 'One click on any page saves it to marks. The server must be running when you click.')}
 <ol class=steps><li><b>Show your bookmarks bar.</b> Press Ctrl+Shift+B (Cmd+Shift+B on a Mac) in Chrome, Edge or Firefox.</li>
-<li><b>Drag this button onto the bar.</b><span class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a><button type=button class=ghost data-copy=code-std>Copy code</button></span></li>
+<li><b>Drag this button onto the bar.</b><span class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET))}">+ Save to marks</a><button type=button class=ghost data-copy=code-std>${ic('copy')}<span class=bl>Copy code</span></button></span></li>
 <li><b>Click it on any page.</b> A new tab opens on the edit screen: add tags and press Save.</li></ol>
-<details class=howto><summary>Show the code</summary><textarea id=code-std readonly rows=6 onclick="this.select()">${BOOKMARKLET}</textarea></details>
+<details class=howto><summary>${ic('caret-right')}Show the code</summary><textarea id=code-std readonly rows=6 onclick="this.select()">${BOOKMARKLET}</textarea></details>
 <h3>If the button is blocked</h3><p class=meta>Some sites block pop-ups. This variant works in the same tab; drag it the same way.</p>
-<p class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET_GET))}">+ Save to marks (simple)</a><button type=button class=ghost data-copy=code-get>Copy code</button></p>
-<details class=howto><summary>Show the simple code</summary><textarea id=code-get readonly rows=3 onclick="this.select()">${BOOKMARKLET_GET}</textarea></details>
+<p class=stepact><a class=dragbtn href="${raw(esc(BOOKMARKLET_GET))}">+ Save to marks (simple)</a><button type=button class=ghost data-copy=code-get>${ic('copy')}<span class=bl>Copy code</span></button></p>
+<details class=howto><summary>${ic('caret-right')}Show the simple code</summary><textarea id=code-get readonly rows=3 onclick="this.select()">${BOOKMARKLET_GET}</textarea></details>
 <p class=meta>Have an older save bookmark that says "No web address arrived"? Delete it and install this one.</p>
-<script>document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{const ta=document.getElementById(b.dataset.copy);try{await navigator.clipboard.writeText(ta.value)}catch(e){const d=ta.closest('details');if(d)d.open=true;ta.select();document.execCommand('copy')}const t=b.textContent;b.textContent='Copied';setTimeout(()=>{b.textContent=t},1600)}))</script>`)));
+<script>document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{const ta=document.getElementById(b.dataset.copy);try{await navigator.clipboard.writeText(ta.value)}catch(e){const d=ta.closest('details');if(d)d.open=true;ta.select();document.execCommand('copy')}const l=b.querySelector('.bl'),t=l.textContent;l.textContent='Copied';setTimeout(()=>{l.textContent=t},1600)}))</script>`)));
 
 app.post('/save', (req, res) => {
   const url = cleanUrl(req.body?.url);
@@ -564,14 +593,14 @@ app.get('/b/:id', (req, res) => {
   const check = st == null ? 'Not checked yet' : h`<span class="badge${isDead(st) ? ' bad' : ''}">HTTP ${st}</span>`;
   res.send(page(b.title || b.url, h`${pageHead(b.title || b.url, h`<a href="${b.url}" rel="noopener noreferrer">${b.url}</a>`)}
     <div class=edit-layout><div class=col-main>
-    ${req.query.new && h`<p class=flash role=status>Saved ✓ ${!b.archived_at && 'Fetching the page in the background: add tags now.'}</p>`}
+    ${req.query.new && h`<p class=flash role=status>${ic('check-circle')} Saved ${!b.archived_at && 'Fetching the page in the background: add tags now.'}</p>`}
     ${req.query.dup && h`<p class=flash role=status>Already saved: edit it below.</p>`}
     <form class=edit method=post action="/b/${b.id}">${req.query.new && h`<input type=hidden name=done value=1>`}<input type=hidden name=back value="${back}">
     <label for=title>Title</label><input type=text id=title name=title value="${b.title}" placeholder="${domain(b.url)}">
     <label for=tags>Tags (comma separated)</label><input type=text id=tags name=tags value="${b.tags.join(', ')}" autocomplete=off list=tl autofocus><datalist id=tl></datalist>
     <div class=chips>${allTags().slice(0, 12).map(t => h`<button type=button class=chip data-t="${t.tag}">#${t.tag}</button>`)}</div>
     <label for=note>Note</label><textarea id=note name=note rows=5>${b.note}</textarea>
-    <p><button>Save</button> <a href="${back}">Cancel</a></p></form>
+    <p><button>${ic('floppy-disk')}Save</button> <a href="${back}">Cancel</a></p></form>
     <form method=post action="/b/${b.id}/delete"><input type=hidden name=back value="${back}"><button>Delete</button></form></div>
     <aside class="side dcard" aria-label="Bookmark details"><div class=top><img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}"><span class=dom>${domain(b.url)}</span></div>
     <dl><dt>Description</dt><dd>${b.description || 'None captured yet'}</dd><dt>Saved</dt><dd>${ago(b.saved_at)} <span class=meta>(${date(b.saved_at)})</span></dd><dt>Last check</dt><dd>${check}</dd><dt>Page text</dt><dd>${b.text ? 'Archived' : b.archived_at ? 'Nothing readable found' : 'Not archived yet'}</dd></dl></aside></div>
@@ -628,16 +657,16 @@ app.post('/undo', (req, res) => {
 
 app.get('/import', (req, res) => res.send(page('Import', h`${pageHead('Import bookmarks', 'Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop. Links you already have are skipped, and nothing is written until you confirm.')}
 <div class=import>
-<label class=drop id=drop for=f><input type=file id=f accept=".html,.htm"><span class=drop-t>Drop your bookmarks file here</span><span class=drop-s>or choose a file (.html)</span></label>
-<p id=err class=err role=alert hidden></p>
-<div id=preview class=panel hidden aria-live=polite><h2>Ready to import</h2><p class=meta>File: <b id=p-file></b></p><div class=stats3><div class=tile><b class=big id=p-new>0</b><span>new</span></div><div class=tile><b class=big id=p-dupe>0</b><span>already saved</span></div><div class=tile><b class=big id=p-tags>0</b><span>tags found</span></div></div><p id=p-none class=meta hidden>Everything in this file is already in your library.</p><div class=row><button id=go type=button>Import</button><button id=again type=button class=ghost>Choose another file</button></div></div>
-<div id=result class=panel hidden role=status><h2>Imported</h2><div class=stats3><div class=tile><b class=big id=r-added>0</b><span>added</span></div><div class=tile><b class=big id=r-skipped>0</b><span>skipped, already saved</span></div></div><p class=meta>Page text isn't fetched during import. Archive the pages in the background to make imported bookmarks searchable by their content.</p><div class=row><a class=btn href="/">View bookmarks</a><form method=post action="/archive" class=inline><button>Archive pages now</button></form></div></div>
-<details class=howto><summary>How do I export my bookmarks?</summary><ul><li><b>Chrome:</b> open chrome://bookmarks, use the menu at the top right, then Export bookmarks.</li><li><b>Firefox:</b> press Ctrl+Shift+O, then Import and Backup, then Export Bookmarks to HTML.</li><li><b>Safari:</b> File, then Export, then Bookmarks.</li><li><b>Raindrop.io:</b> open Settings, choose Import and Export, then export as HTML.</li></ul></details>
+<label class=drop id=drop for=f><input type=file id=f accept=".html,.htm"><span class=drop-i>${ic('upload-simple')}</span><span class=drop-t>Drop your bookmarks file here</span><span class=drop-s>or choose a file (.html)</span></label>
+<p id=err class=err role=alert hidden>${ic('warning-circle')}<span id=err-t></span></p>
+<div id=preview class=panel hidden aria-live=polite><h2>Ready to import</h2><p class=meta>File: <b id=p-file></b></p><div class=stats3><div class=tile><b class=big id=p-new>0</b><span>new</span></div><div class=tile><b class=big id=p-dupe>0</b><span>already saved</span></div><div class=tile><b class=big id=p-tags>0</b><span>tags found</span></div></div><p id=p-none class=meta hidden>Everything in this file is already in your library.</p><div class=row><button id=go type=button>${ic('download-simple')}<span id=go-t>Import</span></button><button id=again type=button class=ghost>Choose another file</button></div></div>
+<div id=result class=panel hidden role=status><h2>Imported</h2><div class=stats3><div class=tile><b class=big id=r-added>0</b><span>added</span></div><div class=tile><b class=big id=r-skipped>0</b><span>skipped, already saved</span></div></div><p class=meta>Page text isn't fetched during import. Archive the pages in the background to make imported bookmarks searchable by their content.</p><div class=row><a class=btn href="/">View bookmarks</a><form method=post action="/archive" class=inline><button>${ic('archive')}Archive pages now</button></form></div></div>
+<details class=howto><summary>${ic('caret-right')}How do I export my bookmarks?</summary><ul><li><b>Chrome:</b> open chrome://bookmarks, use the menu at the top right, then Export bookmarks.</li><li><b>Firefox:</b> press Ctrl+Shift+O, then Import and Backup, then Export Bookmarks to HTML.</li><li><b>Safari:</b> File, then Export, then Bookmarks.</li><li><b>Raindrop.io:</b> open Settings, choose Import and Export, then export as HTML.</li></ul></details>
 </div>
 <script>(()=>{
 const $=id=>document.getElementById(id),f=$('f'),drop=$('drop'),prev=$('preview'),res=$('result'),err=$('err'),go=$('go');
 let file=null;
-const fail=m=>{err.textContent=m;err.hidden=false;prev.hidden=true;res.hidden=true};
+const fail=m=>{$('err-t').textContent=m;err.hidden=false;prev.hidden=true;res.hidden=true};
 const take=async x=>{
   file=x;err.hidden=true;res.hidden=true;drop.classList.add('busy');drop.setAttribute('aria-busy','true');
   try{
@@ -646,7 +675,7 @@ const take=async x=>{
     const d=await r.json();
     if(!d.total)return fail("That doesn't look like a bookmarks export: no web links were found.");
     $('p-file').textContent=x.name;$('p-new').textContent=d.fresh;$('p-dupe').textContent=d.dupes;$('p-tags').textContent=d.tags;
-    go.disabled=d.fresh===0;go.textContent=d.fresh?'Import '+d.fresh+' bookmarks':'Nothing new to import';$('p-none').hidden=d.fresh!==0;prev.hidden=false;
+    go.disabled=d.fresh===0;$('go-t').textContent=d.fresh?'Import '+d.fresh+' bookmarks':'Nothing new to import';$('p-none').hidden=d.fresh!==0;prev.hidden=false;
   }catch(e){fail('Could not read that file. Choose an HTML bookmarks export.')}
   finally{drop.classList.remove('busy');drop.removeAttribute('aria-busy')}
 };
@@ -654,7 +683,7 @@ f.addEventListener('change',()=>{if(f.files[0])take(f.files[0])});
 ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,()=>drop.classList.add('over')));
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,()=>drop.classList.remove('over')));
 go.addEventListener('click',async()=>{
-  go.disabled=true;go.textContent='Importing…';
+  go.disabled=true;$('go-t').textContent='Importing…';
   try{
     const r=await fetch('/import',{method:'POST',headers:{'content-type':'text/plain'},body:file});
     if(!r.ok)throw new Error('bad status');
@@ -690,10 +719,10 @@ app.get('/tags', (req, res) => {
   if (sort === 'az') list.sort((a, b) => a.tag.localeCompare(b.tag));
   const saved = db.prepare('SELECT count(*) n FROM bookmarks').get().n;
   const sg = (k, href, label) => h`<a class="sg${sort === k ? ' on' : ''}" href="${href}"${sort === k ? raw(' aria-current=true') : ''}>${label}</a>`;
-  if (!list.length) return res.send(page('Tags', h`${pageHead('Tags', 'Nothing tagged yet.')}<div class=empty><h3>No tags yet</h3><p>Tags appear when you add them to a bookmark. Open any bookmark, type a tag (separate several with commas) and press Save.</p><a href="/">Back to your bookmarks</a></div>`, { cur: 'tags' }));
+  if (!list.length) return res.send(page('Tags', h`${pageHead('Tags', 'Nothing tagged yet.')}<div class=empty><span class=ei>${ic('tag')}</span><h3>No tags yet</h3><p>Tags appear when you add them to a bookmark. Open any bookmark, type a tag (separate several with commas) and press Save.</p><a href="/">Back to your bookmarks</a></div>`, { cur: 'tags' }));
   res.send(page('Tags', h`${pageHead('Tags', `${plural(list.length, 'tag')} across ${plural(saved, 'bookmark')}. Rename a tag onto another to merge them; delete removes it from every bookmark.`, h`<div class=seg role=group aria-label="Sort tags">${sg('used', '/tags', 'Most used')}${sg('az', '/tags?sort=az', 'A to Z')}</div>`)}
 <div class=tfilter><label class=sr for=tag-filter>Filter tags</label><input id=tag-filter type=search placeholder="Filter tags" autocomplete=off></div>
-<ul class=tagcards>${list.map((t, i) => h`<li class=tagcard style="--i:${Math.min(i, 14)}" data-name="${t.tag}"><a class="tg lg" href="/${qs({ tag: t.tag })}">#${t.tag}</a><div class=count><b class=big>${t.n}</b><span>${t.n === 1 ? 'bookmark' : 'bookmarks'}</span></div><details class=tedit><summary>Edit</summary><form method=post action="/tags/rename"><input type=hidden name=from value="${t.tag}"><label for=rn-${i}>New name</label><input id=rn-${i} type=text name=to value="${t.tag}" autocomplete=off><p class=hint>Renaming onto an existing tag merges them. #${t.tag} is on ${plural(t.n, 'bookmark')}.</p><button>Rename</button></form><details class=del><summary>Delete tag</summary><p class=hint>Removes #${t.tag} from ${plural(t.n, 'bookmark')}. The bookmarks themselves stay.</p><form method=post action="/tags/delete"><input type=hidden name=tag value="${t.tag}"><button>Remove from ${plural(t.n, 'bookmark')}</button></form></details></details></li>`)}</ul>
+<ul class=tagcards>${list.map((t, i) => h`<li class=tagcard style="--i:${Math.min(i, 14)}" data-name="${t.tag}"><a class="tg lg" href="/${qs({ tag: t.tag })}">#${t.tag}</a><div class=count><b class=big>${t.n}</b><span>${t.n === 1 ? 'bookmark' : 'bookmarks'}</span></div><details class=tedit><summary>${ic('caret-right')}Edit</summary><form method=post action="/tags/rename"><input type=hidden name=from value="${t.tag}"><label for=rn-${i}>New name</label><input id=rn-${i} type=text name=to value="${t.tag}" autocomplete=off><p class=hint>Renaming onto an existing tag merges them. #${t.tag} is on ${plural(t.n, 'bookmark')}.</p><button>${ic('pencil-simple')}Rename</button></form><details class=del><summary>${ic('caret-right')}Delete tag</summary><p class=hint>Removes #${t.tag} from ${plural(t.n, 'bookmark')}. The bookmarks themselves stay.</p><form method=post action="/tags/delete"><input type=hidden name=tag value="${t.tag}"><button>Remove from ${plural(t.n, 'bookmark')}</button></form></details></details></li>`)}</ul>
 <p id=tag-none class=meta hidden>No tags match that filter.</p>
 <script>(()=>{const q=document.getElementById('tag-filter'),cards=[...document.querySelectorAll('.tagcard')],none=document.getElementById('tag-none');
 q.addEventListener('input',()=>{const v=q.value.trim().toLowerCase().replace(/^#/,'');let n=0;cards.forEach(c=>{const ok=!v||c.dataset.name.includes(v);c.hidden=!ok;if(ok)n++});none.hidden=n>0})})()</script>`, { cur: 'tags' }));

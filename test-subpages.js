@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
-const { setup } = require('./test-helpers');
+const { setup, bare } = require('./test-helpers');
 
 const tick = () => new Promise(r => setTimeout(r, 25));
 
@@ -20,8 +20,8 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
     assert.match(css, /\.ph h1\{[^}]*font-size:clamp\(1\.9rem,4vw,2\.6rem\)/);
     assert.match(css, /\.lede\{[^}]*color:var\(--mut\)/);
     assert.match(css, /\[hidden\]\{display:none!important\}/); // display:flex/grid on a component must not defeat the hidden attribute
-    assert.match(css, /summary::before\{[^}]*content:"›"/); // disclosures look openable
-    assert.match(css, /details\[open\]>summary::before\{[^}]*transform:rotate\(90deg\)/);
+    assert.match(css, /summary \.ic\{[^}]*transition:transform/); // disclosures look openable: a caret icon that turns when open
+    assert.match(css, /details\[open\]>summary \.ic\{[^}]*transform:rotate\(90deg\)/);
   });
 
   // ---------- tags ----------
@@ -42,7 +42,7 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
 
   await t.test('tags: each card has an Edit disclosure with rename, merge note and a two-step delete that names the count', async () => {
     const html = await s.get('/tags');
-    assert.match(html, /<details class=tedit><summary>Edit<\/summary><form method=post action="\/tags\/rename"><input type=hidden name=from value="dev"><label for=rn-0>New name<\/label><input id=rn-0 type=text name=to value="dev" autocomplete=off><p class=hint>Renaming onto an existing tag merges them\. #dev is on 3 bookmarks\.<\/p><button>Rename<\/button><\/form><details class=del><summary>Delete tag<\/summary><p class=hint>Removes #dev from 3 bookmarks\. The bookmarks themselves stay\.<\/p><form method=post action="\/tags\/delete"><input type=hidden name=tag value="dev"><button>Remove from 3 bookmarks<\/button><\/form><\/details><\/details>/);
+    assert.match(bare(html), /<details class=tedit><summary>Edit<\/summary><form method=post action="\/tags\/rename"><input type=hidden name=from value="dev"><label for=rn-0>New name<\/label><input id=rn-0 type=text name=to value="dev" autocomplete=off><p class=hint>Renaming onto an existing tag merges them\. #dev is on 3 bookmarks\.<\/p><button>Rename<\/button><\/form><details class=del><summary>Delete tag<\/summary><p class=hint>Removes #dev from 3 bookmarks\. The bookmarks themselves stay\.<\/p><form method=post action="\/tags\/delete"><input type=hidden name=tag value="dev"><button>Remove from 3 bookmarks<\/button><\/form><\/details><\/details>/);
     assert.match(html, /#zeta is on 1 bookmark\./);
     assert.match(html, /<button>Remove from 1 bookmark<\/button>/);
     assert.doesNotMatch(html, /confirm\(/, 'no browser popup');
@@ -76,7 +76,7 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
     s.db.prepare('DELETE FROM bookmarks').run();
     const html = await s.get('/tags');
     assert.match(html, /<h1>Tags<\/h1><p class=lede>Nothing tagged yet\.<\/p>/);
-    assert.match(html, /<div class=empty><h3>No tags yet<\/h3><p>Tags appear when you add them to a bookmark\. Open any bookmark, type a tag \(separate several with commas\) and press Save\.<\/p><a href="\/">Back to your bookmarks<\/a><\/div>/);
+    assert.match(bare(html), /<div class=empty><span class=ei><\/span><h3>No tags yet<\/h3><p>Tags appear when you add them to a bookmark\. Open any bookmark, type a tag \(separate several with commas\) and press Save\.<\/p><a href="\/">Back to your bookmarks<\/a><\/div>/);
     assert.doesNotMatch(html, /id=tag-filter/);
   });
 
@@ -84,8 +84,8 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
   await t.test('import: header block, dropzone with a real file input, export how-to', async () => {
     const html = await s.get('/import');
     assert.match(html, /<h1>Import bookmarks<\/h1><p class=lede>Bring in a bookmarks export from Chrome, Firefox, Safari or Raindrop\./);
-    assert.match(html, /<label class=drop id=drop for=f><input type=file id=f accept="\.html,\.htm"><span class=drop-t>Drop your bookmarks file here<\/span><span class=drop-s>or choose a file \(\.html\)<\/span><\/label>/);
-    assert.match(html, /<details class=howto><summary>How do I export my bookmarks\?<\/summary><ul>/);
+    assert.match(bare(html), /<label class=drop id=drop for=f><input type=file id=f accept="\.html,\.htm"><span class=drop-i><\/span><span class=drop-t>Drop your bookmarks file here<\/span><span class=drop-s>or choose a file \(\.html\)<\/span><\/label>/);
+    assert.match(bare(html), /<details class=howto><summary>How do I export my bookmarks\?<\/summary><ul>/);
     assert.doesNotMatch(html, /page text is not fetched/);
   });
 
@@ -129,7 +129,7 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
     assert.equal(d.getElementById('preview').hidden, true);
     assert.deepEqual(['r-added', 'r-skipped'].map(id => d.getElementById(id).textContent), ['3', '2']);
     assert.deepEqual(calls, ['/import?dry=1', '/import']);
-    assert.match(d.getElementById('result').innerHTML, /<a class="btn" href="\/">View bookmarks<\/a><form method="post" action="\/archive" class="inline"><button>Archive pages now<\/button><\/form>/);
+    assert.match(bare(d.getElementById('result').innerHTML), /<a class="btn" href="\/">View bookmarks<\/a><form method="post" action="\/archive" class="inline"><button>Archive pages now<\/button><\/form>/);
   });
 
   await t.test('import: nothing new disables the button; a non-export and a failed request show readable errors', async () => {
@@ -162,8 +162,8 @@ test('sub pages: sticky footer, tags, import, bookmarklet, edit, messages', asyn
     assert.match(html, /<ol class=steps><li><b>Show your bookmarks bar\.<\/b>/);
     assert.equal((/<ol class=steps>([\s\S]*?)<\/ol>/.exec(html)[1].match(/<li>/g) || []).length, 3);
     assert.match(html, /<a class=dragbtn href="javascript:/);
-    assert.match(html, /<button type=button class=ghost data-copy=code-std>Copy code<\/button>/);
-    assert.match(html, /<details class=howto><summary>Show the code<\/summary><textarea id=code-std readonly rows=6/);
+    assert.match(bare(html), /<button type=button class=ghost data-copy=code-std><span class=bl>Copy code<\/span><\/button>/);
+    assert.match(bare(html), /<details class=howto><summary>Show the code<\/summary><textarea id=code-std readonly rows=6/);
     const win = open(html).window, d = win.document;
     let copied = null;
     Object.defineProperty(win.navigator, 'clipboard', { value: { writeText: async v => { copied = v; } } });

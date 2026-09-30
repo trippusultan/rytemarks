@@ -42,6 +42,10 @@ The look is defined in `docs/brand/brand-board.html` (open it in a browser): lig
 
 Cool slate neutrals with one mint-teal accent, a heavy local sans (no font files), monospace for domains, dates and counts, 8px corners, light and dark following your system. The home page opens with a "Your library" hero and four live stat tiles (saved, this week, tags, dead links; shown only on the unfiltered first page), with soft accent light behind the page, glass panels and a faint grain (all off or solid under reduced transparency and reduced motion). Below it is a bento grid (the newest bookmark is featured, cards with notes are taller) with a Cards / List toggle that your browser remembers. Motion is CSS only and switches off under reduced motion.
 
+Navigation is an icon + label top bar (a bottom tab bar on phones) with a search button that opens the palette and a filled Add button; the footer is one slim bar with the credit and tool links. Check links and Archive pages live in the Status panel on the home page.
+
+Icons are [Phosphor Icons](https://phosphoricons.com) (regular weight, MIT licence). The twenty in use are copied into `icons.js` (licence text included) and served as one inline sprite, so there is no network request and no runtime dependency.
+
 - `Ctrl`/`Cmd` + `K`: command palette (search, jump to a tag, open Import or Tags, or paste a URL to save it)
-- `/`: focus the search box
+- `/`: focus the search box (opens the palette on pages without one)
 - `j` / `k`: move through bookmarks, `Enter` opens, `e` edits

@@ -87,7 +87,7 @@ test('design rules', async t => {
     assert.match(html, /<main id=main>/);
     assert.ok(html.indexOf('class=skip') < html.indexOf('<header>'), 'skip link before header');
     assert.match(html, /<a class=skip href="#main">Skip to content<\/a>/);
-    assert.match(html, /<form action="\/" role=search>/);
+    assert.match(html, /<form action="\/" role=search class=hsearch>/);
     assert.match(html, /<aside aria-label="Tags and status">/);
     assert.match(css, /\.skip:focus\{/);
   });

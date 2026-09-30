@@ -30,4 +30,7 @@ async function setup(t, routes = {}) {
   return { ...server, base, fake, post, postRaw, get, state };
 }
 
-module.exports = { setup, ARTICLE };
+// Older text/structure assertions ignore the decorative icon sprites (test-icons.js pins those).
+const bare = html => html.replace(/<svg class="?ic"? [^>]*><use [^>]*?\/?>(<\/use>)?<\/svg>/g, ''); // also matches jsdom's re-serialised form
+
+module.exports = { setup, ARTICLE, bare };
