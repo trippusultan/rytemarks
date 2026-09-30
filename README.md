@@ -28,3 +28,7 @@ Saving a URL already in the archive just opens it for editing. Pages that block 
 - **Link check**: every Sunday 03:00 (only while the server is running) each link is re-fetched and 404/410s get a red `404` badge, which clears if the link recovers. Timeouts and DNS errors are ignored as transient. Press **Check links now** in the footer to run it on demand; **Dead links (N)** in the sidebar lists the flagged ones.
 - **Import**: `/import`, any Netscape bookmarks HTML (Raindrop, Chrome, Firefox). Takes `TAGS`, `ADD_DATE` and `<DD>` notes; folders are ignored, non-http(s) links are dropped, existing URLs are skipped. Imports start without page text; press **Archive N pages** in the footer to fetch it in the background (one attempt per page).
 - **Export**: `/export?format=json` (everything, including page text) or `/export?format=csv` (no page text, since cells that large break spreadsheets; risky leading `= + - @` are prefixed with `'`).
+
+## Backups and auto-start
+
+`npm run backup` writes `backups/marks-<date>.db` (safe while the server runs; to restore, copy it over `marks.db` with the server stopped). Double-click `start-hidden.vbs` to run marks without a console window, and put a shortcut to it in `shell:startup` (Win+R) so the bookmarklet and the weekly link check always have a server to talk to.
