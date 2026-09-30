@@ -10,7 +10,7 @@ const metascraper = require('metascraper')([
   require('metascraper-image')(),
 ]);
 
-const PORT = 4040;
+const PORT = +process.env.PORT || 4040; // PORT=4141 lets a preview run beside your real instance
 const PAGE = 100;
 const UA = 'Mozilla/5.0 (compatible; marks personal bookmark archiver)';
 
@@ -232,7 +232,8 @@ form.inline{display:inline}form.inline button{padding:.1rem .5rem;font-size:13px
 .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
 .chip{background:var(--chip);color:var(--fg);border-color:transparent;border-radius:999px;padding:.15rem .65rem;font-size:13px}
 .chip.on{background:var(--acc);color:#fff}
-.empty{border:1px dashed var(--line);border-radius:12px;padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}`;
+.empty{border:1px dashed var(--line);border-radius:12px;padding:1rem 1.5rem;color:var(--mut)}.empty h3{color:var(--fg);margin-top:0}
+form[action$="/delete"] button{background:transparent;color:var(--bad);border-color:var(--bad)}`;
 
 const page = (title, body, { q = '', tag = '' } = {}) => `<!doctype html><html lang=en><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style>
@@ -280,7 +281,7 @@ app.get('/', (req, res) => {
   const item = b => h`<li class=b>
     <img class=fav src="${b.favicon || new URL(b.url).origin + '/favicon.ico'}" alt="" loading=lazy referrerpolicy=no-referrer onerror="${raw(esc(`this.onerror=null;this.src='${FAV_FALLBACK}'`))}">
     <div><a href="${b.url}">${b.title || b.url}</a> ${isDead(b.status) && h`<span class=dead title="HTTP ${b.status} at last check">404</span>`}
-    <div class=meta>${domain(b.url)} · ${b.tags.map(t => h`<a href="/${qs({ tag: t })}">#${t}</a> `)}· <span title="${date(b.saved_at)}">${ago(b.saved_at)}</span> · <a href="/b/${b.id}${backParam}">edit</a></div>
+    <div class=meta>${domain(b.url)} ${b.tags.map(t => h`· <a href="/${qs({ tag: t })}">#${t}</a> `)}· <span title="${date(b.saved_at)}">${ago(b.saved_at)}</span> · <a href="/b/${b.id}${backParam}">edit</a></div>
     ${b.snippet && h`<div class=meta>${raw(esc(b.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>'))}</div>`}
     ${b.note && h`<div class=meta>${b.note}</div>`}</div></li>`;
   res.send(page('marks', h`<div class=layout>
